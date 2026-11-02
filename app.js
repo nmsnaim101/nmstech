@@ -58,12 +58,14 @@ special:[["Customer Name"],["Requirements","area"]]};
 const TABS=[["home","Home"],["digital","Packages"],["smm","SMM"],["sub","Subscription"],["topup","Top-Up"],["special","Services"],["ai","AI Agent"],["trust","Reviews & Proof"]];
 const isFri=()=>new Intl.DateTimeFormat("en-US",{weekday:"long",timeZone:"Asia/Dhaka"}).format(new Date())=="Friday";
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const $=id=>document.getElementById(id);let QUIET=0,cur="home",ST={smm:Object.keys(SMM)[0],sub:"All"},Q="";
+const $=id=>document.getElementById(id);let QUIET=0,cur=(location.hash&&TABS.some(t=>"#"+t[0]==location.hash)?location.hash.slice(1):"home"),ST={smm:Object.keys(SMM)[0],sub:"All"},Q="";
 const reg=[];const reg_=o=>{reg.push(o);return reg.length-1};
 function card(n,d,p,extra,ord,unit){const i=reg_(ord);return `<div class="card">${media(ord)}<h3>${esc(n)}</h3>${d?`<p>${esc(d)}</p>`:""}<div class="price">৳${p}${unit||""}</div><div class="row">${extra||""}<button class="btn" onclick="openOrder(${i})">Order Now</button></div></div>`}
-let TOP=0;function go(v){cur=v;Q="";TOP=1;render()}
+let TOP=0;const TABIDS=TABS.map(t=>t[0]),TTL={home:"NMS Tech Bangla — ডিজিটাল প্রোডাক্ট, সাবস্ক্রিপশন, Free Fire টপ-আপ ও SMM সার্ভিস",digital:"Digital Products — NMS Tech Bangla",smm:"SMM Panel — NMS Tech Bangla",sub:"Premium Subscription — NMS Tech Bangla",topup:"Free Fire Top-Up — NMS Tech Bangla",special:"Special Services — NMS Tech Bangla",ai:"AI Agent — NMS Tech Bangla",trust:"Reviews & Payment Proof — NMS Tech Bangla"};
+function go(v,np){cur=v;Q="";TOP=1;if(!np&&location.hash!=="#"+v)history.pushState({t:v},"","#"+v);render()}
+addEventListener("popstate",()=>{if($("modal").classList.contains("on")){closeM(1);return}const t=location.hash.slice(1);if(t&&!TABIDS.includes(t))return;const v=t||"home";if(v!==cur)go(v,1)});
 function render(){if(!QUIET&&document.startViewTransition&&!matchMedia("(prefers-reduced-motion:reduce)").matches)document.startViewTransition(()=>_render());else _render()}
-function _render(){if(TOP){scrollTo(0,0);TOP=0}reg.length=0;$("nav").innerHTML=TABS.map(([k,l])=>`<a class="${k==cur?'on':''}" onclick="go('${k}')">${l}</a>`).join("");
+function _render(){document.title=TTL[cur]||document.title;if(TOP){scrollTo(0,0);TOP=0}reg.length=0;$("nav").innerHTML=TABS.map(([k,l])=>`<a class="${k==cur?'on':''}" href="#${k}" onclick="go('${k}');return false">${l}</a>`).join("");{const n=$("nav"),a=n.querySelector(".on");if(a)n.scrollLeft=a.offsetLeft-(n.clientWidth-a.offsetWidth)/2}
 const v={home,digital,smm,sub,topup,special,ai,trust}[cur];const A=$("app");A.innerHTML=v();A.classList.toggle("q",QUIET);if(!QUIET){A.classList.remove("pg");void A.offsetWidth;A.classList.add("pg")}QUIET=0;A.querySelectorAll(".grid .card").forEach((c,i)=>c.style.setProperty("--i",i%12));
 if(cur=="ai")$("aq").focus();post()}
 function srch(ph){return `<input id="q" placeholder="${ph}" value="${esc(Q)}" oninput="QUIET=1;Q=this.value;const p=this.selectionStart;render();const e=$('q');e.focus();e.setSelectionRange(p,p)">`}
@@ -71,7 +73,7 @@ const m=s=>!Q||s.toLowerCase().includes(Q.toLowerCase());
 const catTiles=()=>{
 const lg=(M,k)=>M[k]?`<img loading="lazy" decoding="async" src="${M[k]}" alt="${k}" title="${k}">`:"",em=a=>a.map(e=>`<span>${e}</span>`).join("");
 const nSMM=Object.values(SMM).reduce((a,l)=>a+l.reduce((b,x)=>b+x[1].length,0),0),nTU=TU.reduce((a,g)=>a+g.a.length,0),nSP=SP.reduce((a,g)=>a+g[1].length,0);
-const T=(c,k,ic,t,d,n,logos)=>`<a class="ct ${c}" role="button" tabindex="0" onclick="go('${k}')" onkeydown="if(event.key=='Enter')go('${k}')">${n?`<span class="cnt">${n}</span>`:""}<span class="ic">${ic}</span><h3>${t}</h3><p>${d}</p>${logos?`<div class="lg2">${logos}</div>`:""}</a>`;
+const T=(c,k,ic,t,d,n,logos)=>`<a class="ct ${c}" href="#${k}" onclick="go('${k}');return false">${n?`<span class="cnt">${n}</span>`:""}<span class="ic">${ic}</span><h3>${t}</h3><p>${d}</p>${logos?`<div class="lg2">${logos}</div>`:""}</a>`;
 return `<div class="cats">`
 +T("c1","digital","📦","Digital Products","Software, PDF বই, Course, Reels ও আরও — বান্ডেল প্যাকেজে",D.length+" Packages",em(["💻","📚","🎨","🎒","🎬","🌐"]))
 +T("c2","smm","📣","SMM Panel","Followers, Likes, Views — সব প্ল্যাটফর্মে, দাম প্রতি 1K",nSMM+"+ Services",["Facebook","Instagram","YouTube","TikTok","Telegram","Twitter/X"].map(k=>lg(PL,k)).join(""))
@@ -79,41 +81,41 @@ return `<div class="cats">`
 +T("c4","topup","💎","Top-Up","Free Fire Diamond, Membership, Level Up Pass ও Likes",nTU+"+ Items",em(["💎","🎫","👍","🚀"]))
 +T("c5","special","🎯","Special Services","ভিডিও এডিটিং, ভিডিও মেকিং ও Facebook Marketing — Direct Deal",nSP+" Services",em(["🎬","🎥","📣"]))
 +`</div><div class="cats r2">`
-+`<a class="ct sm c6" role="button" tabindex="0" onclick="go('ai')" onkeydown="if(event.key=='Enter')go('ai')"><span class="ic">${ailogo(38)}</span><div class="tx"><h3>NMS Tech AI</h3><p>প্যাকেজ বা দাম নিয়ে প্রশ্ন করুন</p></div></a>`
-+`<a class="ct sm c7" role="button" tabindex="0" onclick="go('trust')" onkeydown="if(event.key=='Enter')go('trust')"><span class="ic">⭐</span><div class="tx"><h3>Reviews &amp; Payment Proof</h3><p>রিভিউ ও পেমেন্ট প্রুফ দেখে নিশ্চিন্তে অর্ডার করুন</p></div></a>`
++`<a class="ct sm c6" role="button" tabindex="0" href="#" onclick="go('ai');return false" onkeydown="if(event.key=='Enter')go('ai')"><span class="ic">${ailogo(38)}</span><div class="tx"><h3>NMS Tech AI</h3><p>প্যাকেজ বা দাম নিয়ে প্রশ্ন করুন</p></div></a>`
++`<a class="ct sm c7" role="button" tabindex="0" href="#" onclick="go('trust');return false" onkeydown="if(event.key=='Enter')go('trust')"><span class="ic">⭐</span><div class="tx"><h3>Reviews &amp; Payment Proof</h3><p>রিভিউ ও পেমেন্ট প্রুফ দেখে নিশ্চিন্তে অর্ডার করুন</p></div></a>`
 +`</div>`};
 const orbit=()=>{
 const P=[["c1","digital","📦","Digital Products"],["c2","smm","📣","SMM Panel"],["c3","sub","🎬","Subscription"],["c4","topup","💎","Top-Up"],["c5","special","🎯","Special Services"],["c6","ai",ailogo(34),"NMS Tech AI"],["c7","trust","⭐","Reviews & Payment Proof"]];
 const IC=["Netflix","Spotify","ChatGPT","Gemini","Canva","CapCut","Grammarly","Google Drive","Windows 11","Microsoft Office"].filter(k=>SL[k]);
-const nodes=P.map(([c,k,ic,t],i)=>`<div class="nd" style="--a:${(360/P.length*i).toFixed(2)}deg"><div class="ps"><div class="u1" style="--a:${(360/P.length*i).toFixed(2)}deg"><div class="u2"><a class="pk ${c}" role="button" tabindex="0" onclick="go('${k}')" onkeydown="if(event.key=='Enter')go('${k}')"><span class="ic">${ic}</span><b>${esc(t)}</b></a></div></div></div></div>`).join("");
+const nodes=P.map(([c,k,ic,t],i)=>`<div class="nd" style="--a:${(360/P.length*i).toFixed(2)}deg"><div class="ps"><div class="u1" style="--a:${(360/P.length*i).toFixed(2)}deg"><div class="u2"><a class="pk ${c}" href="#${k}" onclick="go('${k}');return false"><span class="ic">${ic}</span><b>${esc(t)}</b></a></div></div></div></div>`).join("");
 const fl=IC.map((k,i)=>{const g=i*(2*Math.PI/IC.length)+.3,r=.155,f=n=>n.toFixed(3);
 return `<div class="wd" style="--cx:${f(r*Math.cos(g))};--cy:${f(r*Math.sin(g))};--ax:${f(.03+.03*((i*7)%3)/2)};--ay:${f(.03+.03*((i*5)%3)/2)};--tx:${5+(i*3)%5}s;--ty:${6+(i*5)%6}s;--dl:-${(i*1.7).toFixed(1)}s"><div class="wx"><div class="wy"><img loading="lazy" decoding="async" src="${SL[k]}" alt="${k}" title="${k}"></div></div></div>`}).join("");
 const lg=(document.querySelector(".lg")||{}).src||"";
 return `<h2>🌐 NMS Tech — সব সার্ভিস এক জায়গায়</h2><p style="color:var(--mu);margin:-4px 0 0">যেকোনো প্যাকেজে ক্লিক করুন</p><div class="orbx" aria-label="NMS Tech packages"><div class="disc"></div><div class="dash"></div>${lg?`<img loading="lazy" decoding="async" class="ctr" alt="" src="${lg}">`:""}${fl}<div class="rg">${nodes}</div></div>`};
-function home(){return `<div class="hero"><img class="hl" alt="NMS Tech Bangla" src="img/img-1e79f3ae.jpg"><h1>ডিজিটাল প্রোডাক্ট, সাবস্ক্রিপশন, টপ-আপ ও সার্ভিস — সবকিছু একসাথে!</h1><p style="color:var(--mu)">প্রয়োজনীয় Digital Products, Premium Subscription, SMM Services, Free Fire Top-Up এবং Special Services—সবকিছু একটি organized platform-এ।</p>
-<a class="btn" onclick="openPick()">🛒 Order Now</a> <a class="btn s" onclick="go('digital')">📦 Explore Packages</a> <a class="btn s" onclick="go('ai')">🤖 Ask AI</a>
+function home(){return `<div class="hero"><img class="hl" alt="NMS Tech Bangla" src="img/img-1e79f3ae.jpg"><h1>ডিজিটাল প্রোডাক্ট, সাবস্ক্রিপশন, টপ-আপ ও সার্ভিস — সবকিছু একসাথে!</h1><p style="color:var(--mu)">Digital Products, Subscription, SMM, Free Fire Top-Up ও Special Services — সব এক জায়গায়।</p>
+<a class="btn big" href="#" role="button" onclick="openPick();return false">🛒 Order Now</a><div class="hb2"><a class="btn s" href="#" role="button" onclick="go('digital');return false">📦 Packages</a><a class="btn s" href="#" role="button" onclick="go('ai');return false">🤖 Ask AI</a></div>
 ${catTiles()}
 <div class="badges"><span>⚡ Fast Service</span><span>🔐 Secure Process</span><span>⭐ Customer Support</span><span>📦 Multiple Digital Services</span></div></div>
 ${orbit()}
 <h2>🏆 Mega Master Bundle</h2><div class="grid">${card(D[0].n,D[0].d,D[0].p,`<a class="btn s" target="_blank" rel="noopener" href="${D[0].demo}">Demo</a>`,D[0])}</div>
 
 <h2>Customer Reviews & Payment Proof</h2>${trustGrid()}<h2>Custom Request</h2><div class="card"><h3>আপনার প্রয়োজনীয় Subscription খুঁজে পাচ্ছেন না?</h3><div class="row"><a class="btn" target="_blank" rel="noopener" href="https://t.me/${NMS.tg}">📲 Telegram — @${NMS.tg}</a><a class="btn s" target="_blank" rel="noopener" href="https://wa.me/${WA}">WhatsApp Support</a></div></div>`}
-function digital(){return `<h2>A — Mega Bundle / Digital Products</h2>${srch("🔍 Search products...")}<div class="grid">${D.filter(x=>m(x.n+x.d)).map(x=>card(x.n,x.d,x.p,`<a class="btn s" target="_blank" rel="noopener" href="${x.demo}">Demo</a>`,x)).join("")||"<p>আপনার search-এর সাথে মিলছে এমন কোনো product পাওয়া যায়নি।</p>"}</div>`}
-function smm(){const P=Object.keys(SMM);let h=`<h2>B — SMM Panel</h2><p style="color:var(--mu)">Platform → Service Category → Package → Order (দাম প্রতি 1K)</p><div class="tabs">${P.map(p=>`<span class="tab ${p==ST.smm?'on':''}" onclick="ST.smm='${p}';render()">${PL[p]?`<img loading="lazy" decoding="async" class="ti" src="${PL[p]}">`:'✈️ '}${p}</span>`).join("")}</div>${srch("🔍 Search package/ID...")}`;
+function digital(){return `<h1 class="pt">A — Mega Bundle / Digital Products</h1>${srch("🔍 Search products...")}<div class="grid">${D.filter(x=>m(x.n+x.d)).map(x=>card(x.n,x.d,x.p,`<a class="btn s" target="_blank" rel="noopener" href="${x.demo}">Demo</a>`,x)).join("")||"<p>আপনার search-এর সাথে মিলছে এমন কোনো product পাওয়া যায়নি।</p>"}</div>`}
+function smm(){const P=Object.keys(SMM);let h=`<h1 class="pt">B — SMM Panel</h1><p style="color:var(--mu)">Platform → Service Category → Package → Order (দাম প্রতি 1K)</p><div class="tabs">${P.map(p=>`<span role="button" tabindex="0" class="tab ${p==ST.smm?'on':''}" onclick="ST.smm='${p}';render()">${PL[p]?`<img loading="lazy" decoding="async" class="ti" alt="${p}" src="${PL[p]}">`:'✈️ '}${p}</span>`).join("")}</div>${srch("🔍 Search package/ID...")}`;
 SMM[ST.smm].forEach(([c,l])=>{const it=l.filter(x=>m(x[0]+x[1]));if(it.length)h+=`<h4>${c}</h4><div class="grid">${it.map(x=>card(x[1],"Package ID: "+x[0],x[2],"",{n:ST.smm+" "+c+" — "+x[0]+" "+x[1],p:x[2],k:'smm',c:ST.smm},"/1K")).join("")}</div>`});return h}
-function sub(){const cats=["All",...new Set(SUB.map(x=>x.c))];return `<h2>C — Subscription</h2><div class="tabs">${cats.map(c=>`<span class="tab ${c==ST.sub?'on':''}" onclick="ST.sub='${c}';render()">${c}</span>`).join("")}</div>${srch("🔍 Search (e.g. Canva)...")}<div class="grid">${SUB.filter(x=>(ST.sub=="All"||x.c==ST.sub)&&m(x.n)).map(x=>card(x.n,x.c,x.p,"",x)).join("")||"<p>আপনার search-এর সাথে মিলছে এমন কোনো product পাওয়া যায়নি।</p>"}</div>
+function sub(){const cats=["All",...new Set(SUB.map(x=>x.c))];return `<h1 class="pt">C — Subscription</h1><div class="tabs">${cats.map(c=>`<span role="button" tabindex="0" class="tab ${c==ST.sub?'on':''}" onclick="ST.sub='${c}';render()">${c}</span>`).join("")}</div>${srch("🔍 Search (e.g. Canva)...")}<div class="grid">${SUB.filter(x=>(ST.sub=="All"||x.c==ST.sub)&&m(x.n)).map(x=>card(x.n,x.c,x.p,"",x)).join("")||"<p>আপনার search-এর সাথে মিলছে এমন কোনো product পাওয়া যায়নি।</p>"}</div>
 <div class="card" style="margin-top:12px"><h3>আপনার প্রয়োজনীয় Subscription খুঁজে পাচ্ছেন না?</h3><div class="row"><a class="btn" target="_blank" rel="noopener" href="https://t.me/${NMS.tg}">📲 Telegram — @${NMS.tg}</a></div></div>`}
 const tuImg=o=>{if(!o||!['uid','mem','likes','pass','friday'].includes(o.k)||typeof TUIMG=='undefined')return"";const it=o.n.split(" — ").slice(1).join(" — ")||"",g=o.c||o.n.split(" — ")[0];
 const k=/monthly membership/i.test(it)?'monthly':/weekly membership/i.test(it)?'weekly':null;return k&&TUIMG[k]||""};
 const tuGK=g=>/Indonesia/.test(g)?'indo':/Guild/.test(g)?'guild':/Level Up/.test(g)?'levelup':/UID TopUp BD/.test(g)?'chest':/Free Fire Likes/.test(g)?'likes':null;
 const tuBanner=g=>{const k=typeof TUIMG!='undefined'&&tuGK(g.g);if(!k||!TUIMG[k])return'';const pr=g.a.map(x=>x[1]);return `<div class="tub"><img loading="lazy" decoding="async" class="tbg" alt="" src="${TUIMG[k]}"><img loading="lazy" decoding="async" class="tbi" alt="${esc(g.g)}" src="${TUIMG[k]}"><div class="tbt"><b>${esc(g.g.replace(/ \(.*\)/,''))}</b><span>${g.a.length}টি আইটেম · ৳${Math.min(...pr)} থেকে</span></div></div>`};
 const TUG=[["monthly","Monthly Membership",3],["weekly","Weekly Membership",3],["chest","Diamond Top-Up",2],["likes","Free Fire Likes",1],["levelup","Level Up Pass",5],["indo","Indonesia Top-Up",6],["guild","Guild Glory",9]];
-const tuGallery=()=>typeof TUIMG=='undefined'?'':`<div class="tug">${TUG.filter(x=>TUIMG[x[0]]).map(([k,t,gi],i)=>`<a role="button" tabindex="0" style="--i:${i}" onclick="tuJump(${gi})" onkeydown="if(event.key=='Enter')tuJump(${gi})"><img loading="lazy" alt="${t}" src="${TUIMG[k]}" style="object-fit:${k=='likes'?'contain':'cover'}"><b>${t}</b></a>`).join('')}</div>`;
+const tuGallery=()=>typeof TUIMG=='undefined'?'':`<div class="tug">${TUG.filter(x=>TUIMG[x[0]]).map(([k,t,gi],i)=>`<a role="button" tabindex="0" style="--i:${i}" href="#" onclick="tuJump(${gi});return false" onkeydown="if(event.key=='Enter')tuJump(${gi})"><img loading="lazy" alt="${t}" src="${TUIMG[k]}" style="object-fit:${k=='likes'?'contain':'cover'}"><b>${t}</b></a>`).join('')}</div>`;
 function tuJump(i){const e=document.getElementById('tg'+i);if(e)e.scrollIntoView({behavior:'smooth',block:'start'})}
-function topup(){return `<h2>D — Top-Up</h2>${srch("🔍 Search (e.g. 1010 Diamond)...")}${Q?'':tuGallery()}`+TU.map(g=>{const it=g.a.filter(x=>m(x[0]+g.g));if(!it.length)return"";const fr=g.o=='friday',av=!fr||isFri();return `<h4 id="tg${TU.indexOf(g)}">${g.g.replace(/ \(.*\)/,'')}</h4>${tuBanner(g)}<div class="grid">${it.map(x=>av?card(x[0],"",x[1],'<span class="in" style="font-size:12px;align-self:center">🟢 Available</span>',{n:g.g+" — "+x[0],p:x[1],k:g.o,c:g.g}):`<div class="card">${media({n:g.g+" — "+x[0],p:x[1],k:g.o,c:g.g})}<h3>${esc(x[0])}</h3><div class="price">৳${x[1]}</div><span class="out">🔴 Out of Stock</span><div class="row"><button class="btn" disabled>Order Now</button></div></div>`).join("")}</div>`}).join("")}
-function special(){return `<h2>F — Special Service with NMS Tech</h2>`+SP.map(([g,l],gi)=>`<h4>${g}</h4><div class="grid">${l.map(x=>card(x[0],"",x[1],gi<2?`<a class="btn s" target="_blank" rel="noopener" href="${DEMO}">👁️ Demo</a>`:"",{n:g+" — "+x[0],p:x[1],k:'special',c:g}).replace("Order Now","📲 Direct Deal on WhatsApp")).join("")}</div>`).join("")}
+function topup(){return `<h1 class="pt">D — Top-Up</h1>${srch("🔍 Search (e.g. 1010 Diamond)...")}${Q?'':tuGallery()}`+[...TU].sort((a,b)=>((a.o=='friday'&&!isFri())?1:0)-((b.o=='friday'&&!isFri())?1:0)).map(g=>{const it=g.a.filter(x=>m(x[0]+g.g));if(!it.length)return"";const fr=g.o=='friday',av=!fr||isFri();return `<h4 id="tg${TU.indexOf(g)}">${g.g.replace(/ \(.*\)/,'')}</h4>${tuBanner(g)}<div class="grid">${it.map(x=>av?card(x[0],"",x[1],'<span class="in" style="font-size:12px;align-self:center">🟢 Available</span>',{n:g.g+" — "+x[0],p:x[1],k:g.o,c:g.g}):`<div class="card">${media({n:g.g+" — "+x[0],p:x[1],k:g.o,c:g.g})}<h3>${esc(x[0])}</h3><div class="price">৳${x[1]}</div><span class="out" style="color:var(--gold)">🗓 শুধু শুক্রবার চালু থাকে</span><div class="row"><button class="btn" disabled>Order Now</button></div></div>`).join("")}</div>`}).join("")}
+function special(){return `<h1 class="pt">F — Special Service with NMS Tech</h1>`+SP.map(([g,l],gi)=>`<h4>${g}</h4><div class="grid">${l.map(x=>card(x[0],"",x[1],gi<2?`<a class="btn s" target="_blank" rel="noopener" href="${DEMO}">👁️ Demo</a>`:"",{n:g+" — "+x[0],p:x[1],k:'special',c:g}).replace("Order Now","📲 Direct Deal on WhatsApp")).join("")}</div>`).join("")}
 const trustGrid=()=>`<div class="grid"><div class="card"><h3>⭐ Customer Reviews</h3><p>আমাদের কাস্টমারদের রিভিউ দেখুন।</p><div class="row"><a class="btn" target="_blank" rel="noopener" href="${RV}">⭐ See Customer Reviews</a></div></div><div class="card"><h3>💳 Payment Proof</h3><p>পেমেন্ট প্রুফ দেখে নিশ্চিত হয়ে অর্ডার করুন।</p><div class="row"><a class="btn" target="_blank" rel="noopener" href="${PF}">💳 See Payment Proof</a></div></div></div>`;
-function trust(){return `<h2>Trust System</h2>${trustGrid()}`}
+function trust(){return `<h1 class="pt">Customer Reviews &amp; Payment Proof</h1>${trustGrid()}`}
 /* ===================================================================
    🤖 AI Agent v2 — ওয়েবসাইটের ডেটা থেকে উত্তর দেয় (বাংলা / English / Banglish)
    • দাম, প্যাকেজ, বাজেট, তুলনা, সাজেশন, অর্ডার বাটন, SMM কোয়ান্টিটি-হিসাব
@@ -352,7 +354,7 @@ r.onend=()=>{AIREC=null;aiRec(0)};r.onerror=()=>{};
 try{r.start()}catch(e){AIREC=null;aiRec(0)}}
 function ai(){if(!AIH.length)AIH.push({i:++AIID,r:'bot',h:aiWelcome(),t:aiTime(),st:'r'});
 setTimeout(()=>{aiScroll();aiSync()},30);
-return `<div class="aititle">${ailogo(42,'ailt')}<h2>NMS Tech <span class="grad">AI</span></h2></div>
+return `<div class="aititle">${ailogo(42,'ailt')}<h1 class="pt">NMS Tech <span class="grad">AI</span></h1></div>
 <div class="aiw"><div class="aih"><div class="avw">${ailogo(44,'ailh')}<i class="od"></i></div><div class="hm"><b>NMS Tech AI ${AIVF}</b><small id="aist">অনলাইন</small></div><button class="aix" onclick="aiClear()" title="চ্যাট মুছুন" aria-label="চ্যাট মুছুন">🗑</button></div>
 <div class="aimw"><div class="aibg"><i class="b1"></i><i class="b2"></i><i class="b3"></i></div><div class="aim" id="aim" role="log" aria-live="polite"><div class="dchip">আজ</div>${AIH.map(msgHTML).join('')}</div></div>
 <div class="aichips" id="aichips">${chipsHTML(AICHIPS)}</div>
@@ -364,9 +366,9 @@ const SV={"Reels": {"u": "img/img-c2d6cb67.webp", "f": "cover"}, "Shorts": {"u":
 const IMGS={"🏆 Mega Master Bundle": "img/img-7d9879a8.webp", "💻 Complete Software & Apps": "img/img-48a390a1.webp", "📚 10,000+ Premium PDF Books": "img/img-d5eb21c1.webp", "🎨 5,000+ Editable Word/PSD/EPS/Vector": "img/img-90dffd49.webp", "🎒 Play → Class 12 All-Class Package": "img/img-a1f34f73.webp", "🌍 69+ Countries PSD File": "img/img-6e7ee899.webp", "🎬 10 Lakhs+ / 20TB+ Reels Bundle": "img/img-7657a7ed.webp", "🌐 Website Course Collection": "img/img-2c9cf881.webp", "🚀 BD + India + Pakistan 2,000+ Courses": "img/img-9ac44401.webp"};/* এখানে ছবি বসবে: "প্যাকেজের নাম":"data:image/..." */
 const BR=[["Netflix","#e50914","N"],["Amazon Prime","#00a8e1","P"],["Zee5","#8230c6","Z"],["Hoichoi","#e8282b","H"],["Chorki","#ff4d6d","C"],["Bongo","#ff6a00","B"],["T-Sports","#0a8f4f","T"],["Crunchyroll","#f47521","C"],["KLiKK","#7c3aed","K"],["Spotify","#1db954","S"],["Gemini","#4f8cff","G"],["ChatGPT","#10a37f","C"],["Canva","#00c4cc","C"],["CapCut","#222","C"],["Grammarly","#15c39a","G"],["Google Drive","#fbbc04","D"],["Google One","#4285f4","1"],["TeraBox","#1e90ff","T"],["YouTube","#ff0000","▶"],["TrueCaller","#0a84ff","T"],["Surfshark","#1ebfd0","S"],["Panda","#ff7a00","P"],["HMA","#e6b800","H"],["Nord","#4687ff","N"],["CyberGhost","#d4a800","C"],["Windows 10","#0078d4","W"],["Windows 11","#0078d4","W"],["Microsoft Office","#d83b01","O"]];
 function media(o){if(!o||!o.n)return"";const im=IMGS[o.n]||IMGS[o.n.split(" — ")[0]];if(im)return`<div class="media im"><img loading="lazy" alt="${esc(o.n)}" src="${im}"></div>`;
-if(o.k=='special'){const v=SV[o.n.split(' — ').slice(1).join(' — ')];if(v)return`<div class="media sv"><img loading="lazy" alt="" src="${v.u}" style="object-fit:${v.f};object-position:${v.p||'center'}"></div>`}
+if(o.k=='special'){const v=SV[o.n.split(' — ').slice(1).join(' — ')];if(v)return`<div class="media sv"><img loading="lazy" alt="${esc(o.n)}" src="${v.u}" style="object-fit:${v.f};object-position:${v.p||'center'}"></div>`}
 if(o.k=='smm'){const l=PL[o.c];if(l)return`<div class="media pl"><img loading="lazy" alt="${esc(o.c)}" src="${l}"></div>`;return`<div class="media pl"><div class="bd" style="background:linear-gradient(135deg,#229ED9,#1b7fb0)">${o.c[0]}</div></div>`}
-if(o.k=='sub'){const b=BR.find(x=>o.n.startsWith(x[0]));if(b&&SL[b[0]])return`<div class="media pl"><img loading="lazy" alt="" src="${SL[b[0]]}"></div>`;if(b)return`<div class="media"><div class="bd" style="background:linear-gradient(135deg,${b[1]},${b[1]}aa)">${b[2]}</div></div>`}
+if(o.k=='sub'){const b=BR.find(x=>o.n.startsWith(x[0]));if(b&&SL[b[0]])return`<div class="media pl"><img loading="lazy" alt="${esc(b[0])}" src="${SL[b[0]]}"></div>`;if(b)return`<div class="media"><div class="bd" style="background:linear-gradient(135deg,${b[1]},${b[1]}aa)">${b[2]}</div></div>`}
 const ti=tuImg(o);if(ti)return`<div class="media tu"><img loading="lazy" alt="${esc(o.n)}" src="${ti}"></div>`;
 const em=(o.n.match(/^\p{Extended_Pictographic}/u)||[])[0]||({smm:"📣",sub:"🎬",special:"🎯",digital:"📦"}[o.k]||"💎");return`<div class="media">${em}</div>`}
 let SHOT=null;
@@ -406,7 +408,7 @@ function orderDone(){$("box").innerHTML=`<h3>✅ অর্ডার জমা �
 function orderFail(){$("box").innerHTML=`<h3>⚠ অর্ডার জমা করা যায়নি</h3><div class="sum">ইন্টারনেট বা সার্ভারে সমস্যা হয়েছে। আপনার Order ID: <b>${ORD.id}</b></div><p style="color:var(--mu);font-size:14px;margin:0 0 10px">আবার চেষ্টা করুন, অথবা অর্ডারটি সরাসরি WhatsApp-এ পাঠিয়ে দিন।</p><button class="btn" id="cbtn" style="width:100%;margin-bottom:10px" onclick="confirmOrder()">🔄 আবার চেষ্টা করুন</button><a class="btn s" style="display:block;text-align:center" target="_blank" rel="noopener" href="${ORD.link}">📲 WhatsApp-এ পাঠান</a><div class="row" style="margin-top:10px"><button class="btn s" onclick="closeM()">Close</button></div>`}
 function openTrack(pre){const ids=myIds();
 $("box").innerHTML=`<h3>📦 অর্ডার স্ট্যাটাস</h3><label>আপনার Order ID</label><input id="tid" placeholder="NMS-261020-A1B2" value="${esc(pre||"")}">${ids.length?`<div class="row" style="margin:8px 0">${ids.map(i=>`<button class="btn s" style="padding:6px 10px" onclick="$('tid').value='${i}';trackOrder()">${i}</button>`).join("")}</div>`:""}<div id="tres" class="sum" style="display:none"></div><div class="row"><button class="btn s" onclick="closeM()">Close</button><button class="btn" onclick="trackOrder()">স্ট্যাটাস দেখুন</button></div>`;
-$("modal").classList.add("on");if(pre)trackOrder()}
+mOpen();if(pre)trackOrder()}
 async function trackOrder(){const id=($("tid").value||"").trim().toUpperCase(),r=$("tres");r.style.display="block";
 if(!OIDRE.test(id)){r.textContent="সঠিক Order ID দিন (যেমন NMS-261020-A1B2)।";return}
 if(!NMS.orderUrl){r.textContent="অর্ডার ট্র্যাকিং এখন চালু নেই।";return}
@@ -422,16 +424,16 @@ function pickFilter(){if(!PALL)PALL=ALL();let r=PALL.filter(it=>PCT=="all"||it.t
 if(q){const toks=aiTok(q);r=r.map(it=>{let t=0;if(toks.length){for(const k of toks){const v=sc(it,k);if(!v){t=0;break}t+=v}}else t=it.hs.includes(q)?1:0;return[it,t]}).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).map(x=>x[0])}
 return r}
 function pickList(){const r=pickFilter();PK=r.slice(0,40);
-$("pkl").innerHTML=PK.length?PK.map((it,i)=>`<div class="pki${it.av?"":" off"}" ${it.av?`onclick="pickOrder(${i})"`:""}><div class="pkn"><b>${esc(it.n)}</b><small>${esc([it.t,it.t!="Digital"?it.g.replace(/ \(.*\)/,""):"",it.x].filter(Boolean).join(" · "))}</small></div><div class="pkp">${it.av?"৳"+it.p+(it.t=="SMM"?" / 1K":""):"Out of Stock"}</div></div>`).join("")+(r.length>40?`<p class="pkm">আরও ${r.length-40}টি আছে — নাম লিখে সার্চ করুন</p>`:""):'<p class="pkm">কিছু পাওয়া যায়নি। অন্য নামে খুঁজুন বা WhatsApp-এ জানান।</p>'}
+$("pkl").innerHTML=PK.length?PK.map((it,i)=>`<div class="pki${it.av?"":" off"}" ${it.av?`onclick="pickOrder(${i})"`:""}><div class="pkn"><b>${esc(it.n)}</b><small>${esc([it.t,it.t!="Digital"?it.g.replace(/ \(.*\)/,""):"",it.x].filter(Boolean).join(" · "))}</small></div><div class="pkp">${it.av?"৳"+it.p+(it.t=="SMM"?" / 1K":""):(/Friday/.test(it.n)?"শুক্রবারে চালু":"Out of Stock")}</div></div>`).join("")+(r.length>40?`<p class="pkm">আরও ${r.length-40}টি আছে — নাম লিখে সার্চ করুন</p>`:""):'<p class="pkm">কিছু পাওয়া যায়নি। অন্য নামে খুঁজুন বা WhatsApp-এ জানান।</p>'}
 function openPick(keep){PICK=1;if(!keep){PQ="";PCT="all";PALL=null}
 $("box").innerHTML=`<h3>🛒 কী অর্ডার করবেন?</h3><input id="pks" placeholder="পণ্যের নাম লিখুন (যেমন Netflix, 1010 Diamond, Followers)" value="${esc(PQ)}" oninput="PQ=this.value;pickList()" autocomplete="off"><div class="pkc">${PCATS.map(([k,l])=>`<button type="button" class="pkch ${PCT==k?"on":""}" onclick="PCT='${k}';openPick(1)">${l}</button>`).join("")}</div><div id="pkl" class="pkl"></div><div class="row"><button class="btn s" onclick="closeM()">Cancel</button></div>`;
-$("modal").classList.add("on");pickList();if(!matchMedia("(pointer:coarse)").matches)$("pks").focus()}
+mOpen();pickList();if(!matchMedia("(pointer:coarse)").matches)$("pks").focus()}
 function pickOrder(i){const it=PK[i];if(it)openOrder(reg_(it.o))}
 function openOrder(i){OD=reg[i]||null;SHOT=null;if(!OD)return;const k=OD.k,f=FIELDS[k]||FIELDS.mem,sp=k=='special';
-$("box").innerHTML=`${PICK?'<a class="bk" onclick="openPick(1)">← অন্য পণ্য বাছুন</a>':""}<h3>${esc(OD.n)}</h3><div class="price">৳${OD.p}${k=='smm'?' / 1K':''}</div>
+$("box").innerHTML=`${PICK?'<a class="bk" href="#" role="button" onclick="openPick(1);return false">← অন্য পণ্য বাছুন</a>':""}<h3>${esc(OD.n)}</h3><div class="price">৳${OD.p}${k=='smm'?' / 1K':''}</div>
 <form onsubmit="return false" id="of">${f.map(([l,ty,opt],j)=>ty=="area"?`<label>${l}</label><textarea id="f${j}" rows="3"></textarea>`:`<label>${l}</label><input id="f${j}" type="${ty||'text'}" ${opt?'':'data-req="1"'} ${/^Quantity/.test(l)?`inputmode="numeric" min="1" oninput="bill()" ${k=='smm'?'placeholder="যেমন 1000"':'value="1"'}`:''}>`).join("")}
 ${sp?"":`<div class="sum bill" id="bill"></div><div class="sum">bKash Send Money: <b>${NMS.bkash}</b> <button type="button" class="cp" onclick="cp('${NMS.bkash}',this)">📋 কপি</button><br>Nagad Send Money: <b>${NMS.nagad}</b> <button type="button" class="cp" onclick="cp('${NMS.nagad}',this)">📋 কপি</button><br><small>নাম্বার কপি করে উপরের বিলের টাকা Send Money করুন।</small></div><label>Payment Method</label><select id="pm"><option value="">-- নির্বাচন করুন --</option><option>bKash</option><option>Nagad</option></select><label>TrxID</label><input id="trx"><label>পেমেন্টের স্ক্রিনশট (ঐচ্ছিক)</label><input type="file" id="shot" accept="image/*" onchange="pv(this)"><img loading="lazy" decoding="async" id="shp" class="shp" alt="">`}
-<input id="hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"></form><p class="out" id="err"></p><div class="row"><button class="btn s" onclick="closeM()">Cancel</button><button class="btn" onclick="summary()">Order Summary</button></div>`;$("modal").classList.add("on");bill()}
+<input id="hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"></form><p class="out" id="err"></p><div class="row"><button class="btn s" onclick="closeM()">Cancel</button><button class="btn" onclick="summary()">Order Summary</button></div>`;mOpen();bill()}
 const fmtT=n=>String(Math.round(n*100)/100);
 function orderTotal(){const k=OD.k,f=FIELDS[k]||FIELDS.mem,qi=f.findIndex(x=>/^Quantity/.test(x[0]));
 if(qi<0)return{qi,q:1,total:OD.p,ok:true};
@@ -446,11 +448,25 @@ b.innerHTML=`💰 <b>আপনার বিল:</b> <b class="tt">৳${fmtT(t.to
 function cp(t,b){const o=b.textContent,ok=()=>{b.textContent="✅ কপি হয়েছে";setTimeout(()=>{b.textContent=o},1500)};
 function fb(){const a=document.createElement("textarea");a.value=t;a.style.cssText="position:fixed;opacity:0";document.body.appendChild(a);a.select();try{document.execCommand("copy");ok()}catch(e){}a.remove()}
 if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(ok,fb);else fb()}
-function closeM(){PICK=0;$("modal").classList.remove("on")}
+let LASTF=null;
+function mOpen(){const m=$("modal");if(!m.classList.contains("on"))LASTF=document.activeElement;m.classList.add("on");m.setAttribute("role","dialog");m.setAttribute("aria-modal","true");m.setAttribute("aria-label","অর্ডার");if(!(history.state&&history.state.m))history.pushState({m:1},"",location.href)}
+function closeM(p){PICK=0;const m=$("modal");if(!m.classList.contains("on"))return;m.classList.remove("on");if(!p&&history.state&&history.state.m)history.back();if(LASTF&&LASTF.focus){try{LASTF.focus()}catch(e){}}}
+addEventListener("keydown",e=>{const m=$("modal");if(m.classList.contains("on")){if(e.key=="Escape"){closeM();return}
+if(e.key=="Tab"){const f=[...m.querySelectorAll('a[href],button:not([disabled]),input:not([tabindex="-1"]),select,textarea')].filter(x=>x.offsetParent);if(f.length){const a=f[0],z=f[f.length-1];if(e.shiftKey&&document.activeElement==a){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement==z){e.preventDefault();a.focus()}}}}
+if((e.key=="Enter"||e.key==" ")&&e.target.matches&&e.target.matches('[role=button]:not(button):not(a)')){e.preventDefault();e.target.click()}});
+function thIcon(){const b=$("thb");if(b)b.textContent=document.documentElement.dataset.theme=="light"?"🌙":"☀️"}
+function toggleTheme(){const d=document.documentElement,n=d.dataset.theme=="light"?"dark":"light";d.dataset.theme=n;try{localStorage.setItem("nmsTheme",n)}catch(e){}thIcon();const m=document.querySelector('meta[name=theme-color]');if(m)m.content=n=="light"?"#f3f5fb":"#0b0720"}
+function fieldErr(f,vals,trx){for(let j=0;j<f.length;j++){const l=f[j][0],v=vals[j][1];
+if(/^Customer Name/.test(l)&&v.length<2)return"নাম কমপক্ষে ২ অক্ষরের দিন।";
+if(/UID/.test(l)&&!/Player/.test(l)&&!/^\d{6,12}$/.test(v))return"UID শুধু সংখ্যা হতে হবে (৬–১২ অঙ্ক)। নম্বরটি ভালো করে দেখে দিন।";
+if(f[j][1]=="email"&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v))return"সঠিক Gmail/Email লিখুন (যেমন name@gmail.com)।";
+if(/Link/.test(l)&&!/^(https?:\/\/|www\.)\S+$|^@[\w.]{2,}$|^[\w-]+\.[a-z]{2,}\/\S*$/i.test(v))return"সঠিক লিংক দিন (যেমন https://facebook.com/yourpage) অথবা @username।"}
+if(trx!==""&&!/^[A-Za-z0-9]{6,20}$/.test(trx))return"TrxID সঠিক নয় — শুধু ইংরেজি অক্ষর/সংখ্যা (৬–২০ অক্ষর)। bKash/Nagad-এর মেসেজ থেকে হুবহু কপি করুন।";return""}
 function summary(){const k=OD.k,f=FIELDS[k]||FIELDS.mem,sp=k=='special';const vals=[];let bad=false;
 f.forEach(([l,ty,opt],j)=>{const v=$("f"+j).value.trim();if(!v&&!opt)bad=true;vals.push([l.split(" (")[0],v])});
 let pm="",trx="";if(!sp){pm=$("pm").value;trx=$("trx").value.trim();if(!pm||!trx)bad=true}
 if(bad){$("err").textContent=sp?"সব তথ্য পূরণ করুন।":"সব তথ্য, Payment Method ও TrxID দিন।";return}
+const ve=fieldErr(f,vals,sp?"":trx);if(ve){$("err").textContent=ve;return}
 const bt=orderTotal();if(bt.qi>=0&&!bt.ok){$("err").textContent=bt.msg;return}let total=bt.total;
 SHOT=(!sp&&$("shot").files[0])||null;if(SHOT&&(!SHOT.type.startsWith("image/")||SHOT.size>8e6)){$("err").textContent="শুধু ছবি (৮MB পর্যন্ত) দিন।";return}
 const oid="NMS-"+new Date().toISOString().slice(2,10).replace(/-/g,"")+"-"+Math.random().toString(36).slice(2,6).toUpperCase();
@@ -464,8 +480,9 @@ render();
 (function(){
   document.getElementById("ft").innerHTML='<img loading="lazy" decoding="async" class="fl" alt="NMS Tech Bangla" src="img/img-4ea1ab73.png"><br><b>NMS Tech Bangla</b><br>Digital Products, Subscriptions, Top-Up &amp; Services'
   +'<div class="fcta"><p>নিয়মিত আপডেট ও অফার পেতে টেলিগ্রাম কমিউনিটিতে যুক্ত থাকুন</p><a class="btn" target="_blank" rel="noopener" href="'+NMS.tgCommunity+'">✈️ টেলিগ্রাম কমিউনিটিতে যোগ দিন</a></div>'
-  +'<div class="fsoc"><a class="btn" onclick="openTrack()">📦 অর্ডার স্ট্যাটাস দেখুন</a></div>'
+  +'<div class="fsoc"><a class="btn" href="#" role="button" onclick="openTrack();return false">📦 অর্ডার স্ট্যাটাস দেখুন</a></div>'
   +'<div class="fsoc"><a class="btn s" target="_blank" rel="noopener" href="'+NMS.fb+'">📘 Facebook পেজ</a><a class="btn s" target="_blank" rel="noopener" href="'+NMS.msg+'">💬 Messenger</a></div>'
   +'WhatsApp: '+NMS.waShow+' · Telegram: @'+NMS.tg+' · Payment: bKash, Nagad<br>© NMS Tech Bangla. All Rights Reserved.';
   document.querySelectorAll("[data-wa]").forEach(function(a){a.href="https://wa.me/"+NMS.wa});
 })();
+thIcon();
