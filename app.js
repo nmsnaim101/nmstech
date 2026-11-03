@@ -64,7 +64,7 @@ function card(n,d,p,extra,ord,unit){const i=reg_(ord);return `<div class="card">
 let TOP=0;const TABIDS=TABS.map(t=>t[0]),TTL={home:"NMS Tech Bangla — ডিজিটাল প্রোডাক্ট, সাবস্ক্রিপশন, Free Fire টপ-আপ ও SMM সার্ভিস",digital:"Digital Products — NMS Tech Bangla",smm:"SMM Panel — NMS Tech Bangla",sub:"Premium Subscription — NMS Tech Bangla",topup:"Free Fire Top-Up — NMS Tech Bangla",special:"Special Services — NMS Tech Bangla",ai:"AI Agent — NMS Tech Bangla",trust:"Reviews & Payment Proof — NMS Tech Bangla"};
 function go(v,np){cur=v;Q="";TOP=1;if(!np&&location.hash!=="#"+v)history.pushState({t:v},"","#"+v);render()}
 addEventListener("popstate",()=>{if($("modal").classList.contains("on")){closeM(1);return}const t=location.hash.slice(1);if(t&&!TABIDS.includes(t))return;const v=t||"home";if(v!==cur)go(v,1)});
-function render(){if(!QUIET&&document.startViewTransition&&!matchMedia("(prefers-reduced-motion:reduce)").matches)document.startViewTransition(()=>_render());else _render()}
+function render(){if(0&&!QUIET&&document.startViewTransition&&!matchMedia("(prefers-reduced-motion:reduce)").matches)document.startViewTransition(()=>_render());else _render()}
 function _render(){document.title=TTL[cur]||document.title;if(TOP){scrollTo(0,0);TOP=0}reg.length=0;$("nav").innerHTML=TABS.map(([k,l])=>`<a class="${k==cur?'on':''}" href="#${k}" onclick="go('${k}');return false">${l}</a>`).join("");{const n=$("nav"),a=n.querySelector(".on");if(a)n.scrollLeft=a.offsetLeft-(n.clientWidth-a.offsetWidth)/2}
 const v={home,digital,smm,sub,topup,special,ai,trust}[cur];const A=$("app");A.innerHTML=v();A.classList.toggle("q",QUIET);if(!QUIET){A.classList.remove("pg");void A.offsetWidth;A.classList.add("pg")}QUIET=0;A.querySelectorAll(".grid .card").forEach((c,i)=>c.style.setProperty("--i",i%12));
 if(cur=="ai")$("aq").focus();post()}
@@ -375,16 +375,16 @@ let SHOT=null;
 function pv(i){const f=i.files[0],e=$("shp");if(f&&f.type.startsWith("image/")&&f.size<=8e6){e.src=URL.createObjectURL(f);e.classList.add("on")}else{e.classList.remove("on");i.value="";if(f)$("err").textContent="শুধু ছবি (৮MB পর্যন্ত) দিন।"}}
 async function shareShot(){try{if(navigator.canShare&&navigator.canShare({files:[SHOT]})){await navigator.share({files:[SHOT],text:"NMS Tech — Payment Screenshot"})}else alert("WhatsApp-এ অর্ডার মেসেজ পাঠানোর পর চ্যাটের 📎 থেকে এই স্ক্রিনশটটি যুক্ত করুন।")}catch(e){}}
 
-const IO=window.IntersectionObserver?new IntersectionObserver(es=>{es.filter(e=>e.isIntersecting).forEach((e,i)=>{e.target.style.setProperty("--d",Math.min(i,8)*80+"ms");e.target.classList.add("rv");IO.unobserve(e.target)})},{rootMargin:"0px 0px -6% 0px",threshold:.06}):null;
+const IO=window.IntersectionObserver?new IntersectionObserver(es=>{es.filter(e=>e.isIntersecting).forEach((e,i)=>{e.target.style.setProperty("--d",Math.min(i,8)*30+"ms");e.target.classList.add("rv");IO.unobserve(e.target)})},{rootMargin:"0px 0px -6% 0px",threshold:.06}):null;
 function post(){const A=$("app");A.querySelectorAll(".card").forEach(c=>{if(!c.querySelector(".gl"))c.insertAdjacentHTML("beforeend",'<i class="gl"></i>')});
 const q=A.classList.contains("q");A.querySelectorAll("h2,h4,.card,.hero").forEach(e=>{if(q||!IO)e.classList.add("rev","rv");else{e.classList.add("rev");IO.observe(e)}});
-A.querySelectorAll(".media img").forEach((im,i)=>setTimeout(()=>im.classList.add("ld"),150+i%8*80))}
-let LC=null,RAF=0,PE=null;const FP=matchMedia("(hover:hover) and (pointer:fine)").matches;
+A.querySelectorAll(".media img").forEach((im,i)=>setTimeout(()=>im.classList.add("ld"),i%8*30))}
+let LC=null,RAF=0,PE=null;const FP=false;
 function rc(c){c.style.removeProperty("--rx");c.style.removeProperty("--ry")}
 if(FP)document.addEventListener("pointermove",e=>{PE=e;if(RAF)return;RAF=requestAnimationFrame(()=>{RAF=0;const c=PE.target.closest&&PE.target.closest("#app .card");if(LC&&LC!==c)rc(LC);LC=c;if(!c)return;const b=c.getBoundingClientRect(),x=(PE.clientX-b.left)/b.width,y=(PE.clientY-b.top)/b.height;c.style.setProperty("--ry",((x-.5)*9).toFixed(2)+"deg");c.style.setProperty("--rx",((.5-y)*9).toFixed(2)+"deg");c.style.setProperty("--mx",x*100+"%");c.style.setProperty("--my",y*100+"%")})});
 document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest(".btn");if(!b||b.disabled)return;const r=b.getBoundingClientRect(),s=document.createElement("span");s.className="rp";s.style.left=e.clientX-r.left+"px";s.style.top=e.clientY-r.top+"px";b.appendChild(s);setTimeout(()=>s.remove(),800)});
 let SC=0;addEventListener("scroll",()=>{if(SC)return;SC=requestAnimationFrame(()=>{SC=0;const h=document.documentElement,m=h.scrollHeight-innerHeight;$("spb").style.setProperty("--p",m>0?Math.min(1,scrollY/m):0);document.querySelector("header").classList.toggle("sc",scrollY>24)})},{passive:true});
-$("spi").src=document.querySelector(".lg").src;setTimeout(()=>{const x=$("sp");x&&x.remove()},2100);
+$("spi").src=document.querySelector(".lg").src;setTimeout(()=>{const x=$("sp");x&&x.remove()},1300);
 let OD=null,ORD=null;
 /* অর্ডার Google Sheet-এ পাঠানো (NMS.orderUrl খালি থাকলে কিছু হয় না; ব্যর্থ হলেও WhatsApp অর্ডার চলবে) */
 const OIDRE=/^NMS-\d{6}-[A-Z0-9]{4}$/;
@@ -486,3 +486,12 @@ render();
   document.querySelectorAll("[data-wa]").forEach(function(a){a.href="https://wa.me/"+NMS.wa});
 })();
 thIcon();
+
+/* দাম আপডেট (অ্যাডমিন প্যানেল থেকে বদলালে prices.js এটা ডাকে) — অর্ডার ফর্ম খোলা থাকলে বিরক্ত করে না */
+function reprice(){
+  D.forEach(x=>{x.p=PRICE_DIGITAL[x.n]});
+  SUB.forEach((x,i)=>{x.p=PRICE_SUB[i][3]});
+  Object.keys(SMM).forEach(pl=>SMM[pl].forEach(([c,it])=>it.forEach(x=>{x[2]=PRICE_SMM[pl][x[0]]})));
+  PALL=null;
+  if(!$("modal").classList.contains("on")&&cur!="ai"&&!document.activeElement.matches("input,textarea,select")){QUIET=1;render()}
+}

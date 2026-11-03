@@ -51,6 +51,24 @@ a{color:var(--bl)}
 .warnbar{background:rgba(217,48,37,.14);color:var(--rd);border:1px solid var(--rd);border-radius:10px;padding:8px 10px;margin:6px 0;font-size:14px}.stats{font-size:13px;color:var(--mu);margin:2px 0 4px}
 .empty{text-align:center;color:var(--mu);padding:40px 0}
 .st-new{color:var(--wa)}.st-chk{color:var(--bl)}.st-pro{color:var(--pu)}.st-ok{color:var(--ok)}.st-no{color:var(--rd)}.st-ot{color:var(--mu)}
+.vt{display:flex;gap:6px;margin:0 0 6px}
+.pvb{position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0 8px}
+.pvb .r2{display:flex;gap:6px;margin-top:8px;align-items:center}.pvb .r2 .btn{flex:1}
+details.pg{background:var(--card);border:1px solid var(--bd);border-radius:14px;margin:8px 0;overflow:hidden}
+details.pg>summary{cursor:pointer;padding:11px 14px;font-weight:700;display:flex;justify-content:space-between;gap:8px;align-items:center;list-style:none}
+details.pg>summary::-webkit-details-marker{display:none}
+details.pg>summary small{color:var(--mu);font-weight:500}
+.pgb{border-top:1px dashed var(--bd);padding:4px 10px 10px}
+.pgt{font-size:12px;color:var(--mu);margin:10px 4px 2px;font-weight:700}
+.pi{display:grid;grid-template-columns:1fr 104px 28px;gap:6px;align-items:center;padding:5px 4px;border-bottom:1px solid var(--bd)}
+.pi:last-child{border-bottom:0}
+.pi .nm{font-size:13.5px;word-break:break-word}.pi .nm small{display:block;color:var(--mu);font-size:11.5px}
+.pi input{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:7px 8px;text-align:right}
+.pi.ch input{border-color:var(--ac);background:rgba(91,91,240,.12);font-weight:700}
+.pi.bad input{border-color:var(--rd)}
+.pi .rs{border:0;background:none;cursor:pointer;font-size:15px;visibility:hidden;padding:0}.pi.ch .rs{visibility:visible}
+.pcnt{font-size:13px;color:var(--mu)}
+.pgp{border:1px solid var(--bd);background:var(--bg);border-radius:8px;padding:3px 9px;font-size:12px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -73,17 +91,29 @@ a{color:var(--bl)}
         <button class="btn s" id="lo">বের হন</button>
       </div>
     </div>
+    <div class="vt"><button class="chip on" data-v="orders">📦 অর্ডার</button><button class="chip" data-v="prices">💰 দাম বদলান</button></div>
+    <div id="ovh">
     <div id="warn" class="warnbar" style="display:none"></div>
     <div id="stats" class="stats"></div>
     <input id="q" type="search" placeholder="সার্চ: Order ID, নাম, TrxID, পণ্য, Gmail...">
     <div class="chips" id="chips"></div>
+    </div>
   </div>
   <div id="list"></div>
+  <div id="pv" style="display:none">
+    <div class="pvb">
+      <input id="pq" type="search" placeholder="সার্চ: Netflix, Diamond, 12174, Reels...">
+      <div class="r2"><span class="pcnt" id="pcnt"></span><button class="btn" id="psave" disabled>💾 সেভ করুন</button><button class="btn s" id="prst" style="flex:0 0 auto">↺ সব ডিফল্ট</button></div>
+    </div>
+    <div id="plist"></div>
+  </div>
 </div>
 
 </div>
 <div id="toast"></div>
 
+<script src="data.js"></script>
+<script src="prices.js"></script>
 <script>
 const API="https://script.google.com/macros/s/AKfycbzsCxVsEr9cV0gGSydd611_3pjWyZSvaOb0xWCeG_ykRiKGrlsolmZ_9A0dBZveH1TARg/exec";
 const $=id=>document.getElementById(id);
@@ -98,7 +128,7 @@ async function api(body){
 }
 function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),2600)}
 
-function showLogin(msg){TOKEN="";try{sessionStorage.removeItem("nms_adm")}catch(e){}clearInterval(TIMER);$("app").style.display="none";$("login").style.display="block";$("lerr").textContent=msg||"";$("pw").value="";$("pw").focus()}
+function showLogin(msg){TOKEN="";PLOADED=false;PO={};try{sessionStorage.removeItem("nms_adm")}catch(e){}clearInterval(TIMER);$("app").style.display="none";$("login").style.display="block";$("lerr").textContent=msg||"";$("pw").value="";$("pw").focus()}
 function showApp(){$("login").style.display="none";$("app").style.display="block";clearInterval(TIMER);TIMER=setInterval(()=>{if(!document.hidden)load(true)},30000)}
 
 async function login(){
@@ -108,7 +138,7 @@ async function login(){
     const d=await api({action:"login",password:pw});
     if(d.ok){TOKEN=d.token;try{sessionStorage.setItem("nms_adm",TOKEN)}catch(e){}showApp();await load(false)}
     else $("lerr").textContent=d.err=="locked"?"অনেকবার ভুল দেওয়া হয়েছে। ১০ মিনিট পর আবার চেষ্টা করুন।":d.err=="nopass"?"সার্ভারে ADMIN_PASSWORD সেট করা নেই (কমপক্ষে ৮ অক্ষর)।":"পাসওয়ার্ড ভুল।";
-  }catch(e){$("lerr").textContent="সার্ভারে যোগাযোগ করা যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন."}
+  }catch(e){$("lerr").textContent="সার্ভারে যোগাযোগ করা যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।"}
   b.disabled=false;b.textContent="লগিন";
 }
 
@@ -187,6 +217,86 @@ $("list").addEventListener("click",e=>{
   else if(a.dataset.act=="st")setStatus(id,a.dataset.s);
 });
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&TOKEN)load(true)});
+
+/* ---------- 💰 দাম বদলান ---------- */
+let PO={},PSAVED="{}",PLOADED=false,PROWS=[],PTIMER=0;
+const PBYK={};
+function pDirty(){return JSON.stringify(PO)!==PSAVED}
+function setView(v){
+  $("ovh").style.display=$("list").style.display=v=="orders"?"":"none";$("pv").style.display=v=="prices"?"block":"none";
+  document.querySelectorAll(".vt [data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v==v));
+  if(v=="prices")loadPrices();
+}
+async function loadPrices(){
+  if(PLOADED){renderPrices();return}
+  $("plist").innerHTML='<div class="empty">লোড হচ্ছে...</div>';
+  try{
+    const d=await api({action:"getPrices",token:TOKEN});
+    if(d.ok){PO=d.p||{};PSAVED=JSON.stringify(PO);PLOADED=true;PROWS=priceRows();PROWS.forEach(r=>{PBYK[r.k]=r});renderPrices()}
+    else if(d.err=="auth")showLogin("সেশন শেষ হয়েছে, আবার লগিন করুন।");
+    else{$("plist").innerHTML='<div class="empty">দাম আনা যায়নি। Apps Script-এ নতুন Code.gs বসিয়ে Deploy → New version দিয়েছেন তো?</div>'}
+  }catch(e){$("plist").innerHTML='<div class="empty">ইন্টারনেট সমস্যা — আবার চেষ্টা করুন</div>'}
+}
+function pCount(){const n=Object.keys(PO).length,d=pDirty();$("pcnt").textContent=n?n+"টির দাম বদলানো":"সব ডিফল্ট দাম";$("psave").disabled=!d;$("psave").textContent=d?"💾 সেভ করুন (অসংরক্ষিত)":"💾 সেভ করুন"}
+function renderPrices(){
+  const q=$("pq").value.trim().toLowerCase(),secs={};
+  PROWS.forEach(r=>{if(q&&!(r.n+" "+r.grp+" "+r.sec).toLowerCase().includes(q))return;((secs[r.sec]=secs[r.sec]||{})[r.grp]=(secs[r.sec][r.grp]||[])).push(r)});
+  const keys=Object.keys(secs);
+  if(!keys.length){$("plist").innerHTML='<div class="empty">কিছু পাওয়া যায়নি</div>';pCount();return}
+  $("plist").innerHTML=keys.map(sec=>{
+    const gs=secs[sec],cnt=Object.values(gs).reduce((a,l)=>a+l.length,0);
+    return `<details class="pg" ${q?"open":""}><summary><span>${esc(sec)}</span><span><small>${cnt}টি</small> <button class="pgp" data-pct="${esc(sec)}" type="button">% বদলান</button></span></summary><div class="pgb">`+
+      Object.keys(gs).map(g=>(g?`<div class="pgt">${esc(g)}</div>`:"")+gs[g].map(rowHTML).join("")).join("")+`</div></details>`}).join("");
+  pCount();
+}
+function rowHTML(r){
+  const v=PO[r.k],ch=v!==undefined;
+  return `<div class="pi ${ch?"ch":""}" data-k="${esc(r.k)}"><div class="nm">${esc(r.n)}${ch?`<small>ডিফল্ট: ৳${r.p}</small>`:""}</div><input type="number" inputmode="decimal" min="0" step="any" value="${ch?v:r.p}"><button class="rs" type="button" title="ডিফল্টে ফেরান">↺</button></div>`}
+function pSet(k,val){
+  const r=PBYK[k];if(!r)return false;
+  const n=Number(val);if(val===""||!isFinite(n)||n<0)return false;
+  const x=Math.round(n*100)/100;
+  if(x===r.p)delete PO[k];else PO[k]=x;
+  return true;
+}
+function pRowUpd(row){
+  const k=row.dataset.k,r=PBYK[k],ch=PO[k]!==undefined;
+  row.classList.toggle("ch",ch);
+  const nm=row.querySelector(".nm"),sm=nm.querySelector("small");
+  if(ch&&!sm)nm.insertAdjacentHTML("beforeend",`<small>ডিফল্ট: ৳${r.p}</small>`);else if(!ch&&sm)sm.remove();
+}
+$("plist").addEventListener("input",e=>{
+  const row=e.target.closest(".pi");if(!row)return;
+  const ok=pSet(row.dataset.k,e.target.value);row.classList.toggle("bad",!ok);if(ok){pRowUpd(row);pCount()}
+});
+$("plist").addEventListener("click",e=>{
+  const rs=e.target.closest(".rs");
+  if(rs){const row=rs.closest(".pi"),k=row.dataset.k;delete PO[k];row.querySelector("input").value=PBYK[k].p;row.classList.remove("bad");pRowUpd(row);pCount();return}
+  const pb=e.target.closest("[data-pct]");
+  if(pb){
+    e.preventDefault();e.stopPropagation();
+    const sec=pb.dataset.pct,s=prompt('"'+sec+'" এর সব দাম কত % বাড়াবেন? (কমাতে মাইনাস দিন, যেমন -10)\nশুধু এই বিভাগের সার্চে দেখানো আইটেমগুলো বদলাবে।',"10");
+    if(s===null)return;const p=Number(s);if(!isFinite(p)||p<=-100||p>500){toast("সঠিক % দিন");return}
+    const q=$("pq").value.trim().toLowerCase();let n=0;
+    PROWS.forEach(r=>{if(r.sec!==sec||(q&&!(r.n+" "+r.grp+" "+r.sec).toLowerCase().includes(q)))return;
+      const cur=PO[r.k]!==undefined?PO[r.k]:r.p,nv=cur*(1+p/100);pSet(r.k,String(nv<20?Math.round(nv*100)/100:Math.round(nv)));n++});
+    renderPrices();toast(n+"টির দাম বদলানো হয়েছে — সেভ করতে ভুলবেন না");
+  }
+});
+$("pq").addEventListener("input",()=>{clearTimeout(PTIMER);PTIMER=setTimeout(renderPrices,200)});
+$("psave").onclick=async()=>{
+  const b=$("psave");b.disabled=true;b.textContent="সেভ হচ্ছে...";
+  try{
+    const d=await api({action:"setPrices",token:TOKEN,prices:PO});
+    if(d.ok){PSAVED=JSON.stringify(PO);toast("✅ নতুন দাম সেভ হয়েছে — সাইটে কয়েক সেকেন্ডে দেখা যাবে")}
+    else if(d.err=="auth")showLogin("সেশন শেষ হয়েছে, আবার লগিন করুন।");
+    else toast("⚠ সেভ হয়নি"+(d.err=="big"?" (অনেক বেশি পরিবর্তন)":"")+" — Code.gs নতুনটা বসিয়েছেন তো?");
+  }catch(e){toast("⚠ ইন্টারনেট সমস্যা — সেভ হয়নি")}
+  pCount();
+};
+$("prst").onclick=()=>{if(!Object.keys(PO).length||!confirm("সব দাম ডিফল্টে ফিরবে (সেভ না করা পর্যন্ত সাইটে বদলাবে না)। নিশ্চিত?"))return;PO={};renderPrices()};
+document.querySelectorAll(".vt [data-v]").forEach(b=>b.onclick=()=>setView(b.dataset.v));
+window.addEventListener("beforeunload",e=>{if(PLOADED&&pDirty()){e.preventDefault();e.returnValue=""}});
 
 if(TOKEN){showApp();load(false)}else showLogin("");
 </script>
