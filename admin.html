@@ -6,12 +6,14 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#0b0720">
 <title>NMS Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400..800&family=Anek+Latin:wght@400..800&display=swap" rel="stylesheet">
+
 <style>
 :root{--bg:#f3f4fb;--card:#fff;--tx:#14162b;--mu:#5d6385;--bd:#dfe2f2;--ac:#5b5bf0;--ok:#0f9d58;--wa:#d97706;--rd:#d93025;--bl:#1a73e8;--pu:#8e44ad}
 @media(prefers-color-scheme:dark){:root{--bg:#0b0720;--card:#171232;--tx:#ecebff;--mu:#9a98c4;--bd:#2b2557;--ac:#8b8bff;--ok:#3ddc84;--wa:#fbbf24;--rd:#ff6b6b;--bl:#6ea8ff;--pu:#c58bff}}
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--tx);font-family:system-ui,"Nirmala UI","Noto Sans Bengali",sans-serif;font-size:15px;line-height:1.5;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+body{background:var(--bg);color:var(--tx);font-family:"Anek Latin","Anek Bangla",system-ui,"Nirmala UI","Noto Sans Bengali",sans-serif;font-size:15px;line-height:1.5;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
 .wrap{max-width:760px;margin:0 auto;padding:12px}
 h1{font-size:19px;margin:0}
 button,input,select{font:inherit;color:inherit}
@@ -49,26 +51,17 @@ a{color:var(--bl)}
 #toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0));transform:translateX(-50%);background:#222;color:#fff;border-radius:10px;padding:9px 14px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20;max-width:90vw;text-align:center}
 #toast.on{opacity:1}
 .warnbar{background:rgba(217,48,37,.14);color:var(--rd);border:1px solid var(--rd);border-radius:10px;padding:8px 10px;margin:6px 0;font-size:14px}.stats{font-size:13px;color:var(--mu);margin:2px 0 4px}
+.seg{display:flex;gap:6px;margin:0 0 6px}.seg button{flex:1;border:1px solid var(--bd);background:var(--card);border-radius:10px;padding:8px;cursor:pointer;font-weight:600}.seg button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.prow{display:flex;gap:10px;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin:8px 0}
+.prow.chg{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset}.prow.off .pn{opacity:.5}
+.pn{min-width:0;flex:1}.pn b{display:block;font-size:14px;line-height:1.35;word-break:break-word}.pn small{color:var(--mu);font-size:12px}
+.pc{display:flex;flex-direction:column;align-items:flex-end;gap:4px}.pp{width:100px;text-align:right;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:6px 8px}
+.pav{font-size:13px;color:var(--mu);display:flex;align-items:center;gap:4px;cursor:pointer}
+.bulk{display:flex;gap:6px;margin:6px 0 2px}.bulk input{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 10px}
+#psave{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--bd);display:none;z-index:15}
+#psave .wrap{display:flex;gap:8px;max-width:760px;margin:0 auto;padding:0}
 .empty{text-align:center;color:var(--mu);padding:40px 0}
 .st-new{color:var(--wa)}.st-chk{color:var(--bl)}.st-pro{color:var(--pu)}.st-ok{color:var(--ok)}.st-no{color:var(--rd)}.st-ot{color:var(--mu)}
-.vt{display:flex;gap:6px;margin:0 0 6px}
-.pvb{position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0 8px}
-.pvb .r2{display:flex;gap:6px;margin-top:8px;align-items:center}.pvb .r2 .btn{flex:1}
-details.pg{background:var(--card);border:1px solid var(--bd);border-radius:14px;margin:8px 0;overflow:hidden}
-details.pg>summary{cursor:pointer;padding:11px 14px;font-weight:700;display:flex;justify-content:space-between;gap:8px;align-items:center;list-style:none}
-details.pg>summary::-webkit-details-marker{display:none}
-details.pg>summary small{color:var(--mu);font-weight:500}
-.pgb{border-top:1px dashed var(--bd);padding:4px 10px 10px}
-.pgt{font-size:12px;color:var(--mu);margin:10px 4px 2px;font-weight:700}
-.pi{display:grid;grid-template-columns:1fr 104px 28px;gap:6px;align-items:center;padding:5px 4px;border-bottom:1px solid var(--bd)}
-.pi:last-child{border-bottom:0}
-.pi .nm{font-size:13.5px;word-break:break-word}.pi .nm small{display:block;color:var(--mu);font-size:11.5px}
-.pi input{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:7px 8px;text-align:right}
-.pi.ch input{border-color:var(--ac);background:rgba(91,91,240,.12);font-weight:700}
-.pi.bad input{border-color:var(--rd)}
-.pi .rs{border:0;background:none;cursor:pointer;font-size:15px;visibility:hidden;padding:0}.pi.ch .rs{visibility:visible}
-.pcnt{font-size:13px;color:var(--mu)}
-.pgp{border:1px solid var(--bd);background:var(--bg);border-radius:8px;padding:3px 9px;font-size:12px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -91,29 +84,29 @@ details.pg>summary small{color:var(--mu);font-weight:500}
         <button class="btn s" id="lo">বের হন</button>
       </div>
     </div>
-    <div class="vt"><button class="chip on" data-v="orders">📦 অর্ডার</button><button class="chip" data-v="prices">💰 দাম বদলান</button></div>
-    <div id="ovh">
-    <div id="warn" class="warnbar" style="display:none"></div>
-    <div id="stats" class="stats"></div>
-    <input id="q" type="search" placeholder="সার্চ: Order ID, নাম, TrxID, পণ্য, Gmail...">
-    <div class="chips" id="chips"></div>
+    <div class="seg"><button class="on" id="tabO">📦 অর্ডার</button><button id="tabP">💰 দাম</button></div>
+    <div id="oc">
+      <div id="warn" class="warnbar" style="display:none"></div>
+      <div id="stats" class="stats"></div>
+      <input id="q" type="search" placeholder="সার্চ: Order ID, নাম, TrxID, পণ্য, Gmail...">
+      <div class="chips" id="chips"></div>
+    </div>
+    <div id="pc" style="display:none">
+      <input id="pq" type="search" placeholder="সার্চ: পণ্যের নাম বা গ্রুপ...">
+      <div class="chips" id="pchips"></div>
+      <div class="bulk"><input id="bulkp" type="number" step="0.1" placeholder="% (যেমন 5 বা -5)"><button class="btn s" id="bulkb">দেখানো সারিতে %</button></div>
     </div>
   </div>
   <div id="list"></div>
-  <div id="pv" style="display:none">
-    <div class="pvb">
-      <input id="pq" type="search" placeholder="সার্চ: Netflix, Diamond, 12174, Reels...">
-      <div class="r2"><span class="pcnt" id="pcnt"></span><button class="btn" id="psave" disabled>💾 সেভ করুন</button><button class="btn s" id="prst" style="flex:0 0 auto">↺ সব ডিফল্ট</button></div>
-    </div>
-    <div id="plist"></div>
-  </div>
+  <div id="plist" style="display:none"></div>
+  <div style="height:80px"></div>
+  <div id="psave"><div class="wrap"><button class="btn" id="psb" style="flex:1"></button><button class="btn s" id="prs">↩ বাতিল</button></div></div>
 </div>
 
 </div>
 <div id="toast"></div>
 
-<script src="data.js"></script>
-<script src="prices.js"></script>
+<script src="catalog.js"></script>
 <script>
 const API="https://script.google.com/macros/s/AKfycbzsCxVsEr9cV0gGSydd611_3pjWyZSvaOb0xWCeG_ykRiKGrlsolmZ_9A0dBZveH1TARg/exec";
 const $=id=>document.getElementById(id);
@@ -128,7 +121,7 @@ async function api(body){
 }
 function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),2600)}
 
-function showLogin(msg){TOKEN="";PLOADED=false;PO={};try{sessionStorage.removeItem("nms_adm")}catch(e){}clearInterval(TIMER);$("app").style.display="none";$("login").style.display="block";$("lerr").textContent=msg||"";$("pw").value="";$("pw").focus()}
+function showLogin(msg){TOKEN="";try{sessionStorage.removeItem("nms_adm")}catch(e){}clearInterval(TIMER);$("app").style.display="none";$("login").style.display="block";$("lerr").textContent=msg||"";$("pw").value="";$("pw").focus()}
 function showApp(){$("login").style.display="none";$("app").style.display="block";clearInterval(TIMER);TIMER=setInterval(()=>{if(!document.hidden)load(true)},30000)}
 
 async function login(){
@@ -138,7 +131,7 @@ async function login(){
     const d=await api({action:"login",password:pw});
     if(d.ok){TOKEN=d.token;try{sessionStorage.setItem("nms_adm",TOKEN)}catch(e){}showApp();await load(false)}
     else $("lerr").textContent=d.err=="locked"?"অনেকবার ভুল দেওয়া হয়েছে। ১০ মিনিট পর আবার চেষ্টা করুন।":d.err=="nopass"?"সার্ভারে ADMIN_PASSWORD সেট করা নেই (কমপক্ষে ৮ অক্ষর)।":"পাসওয়ার্ড ভুল।";
-  }catch(e){$("lerr").textContent="সার্ভারে যোগাযোগ করা যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।"}
+  }catch(e){$("lerr").textContent="সার্ভারে যোগাযোগ করা যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন."}
   b.disabled=false;b.textContent="লগিন";
 }
 
@@ -218,85 +211,46 @@ $("list").addEventListener("click",e=>{
 });
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&TOKEN)load(true)});
 
-/* ---------- 💰 দাম বদলান ---------- */
-let PO={},PSAVED="{}",PLOADED=false,PROWS=[],PTIMER=0;
-const PBYK={};
-function pDirty(){return JSON.stringify(PO)!==PSAVED}
-function setView(v){
-  $("ovh").style.display=$("list").style.display=v=="orders"?"":"none";$("pv").style.display=v=="prices"?"block":"none";
-  document.querySelectorAll(".vt [data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v==v));
-  if(v=="prices")loadPrices();
-}
-async function loadPrices(){
-  if(PLOADED){renderPrices();return}
-  $("plist").innerHTML='<div class="empty">লোড হচ্ছে...</div>';
-  try{
-    const d=await api({action:"getPrices",token:TOKEN});
-    if(d.ok){PO=d.p||{};PSAVED=JSON.stringify(PO);PLOADED=true;PROWS=priceRows();PROWS.forEach(r=>{PBYK[r.k]=r});renderPrices()}
-    else if(d.err=="auth")showLogin("সেশন শেষ হয়েছে, আবার লগিন করুন।");
-    else{$("plist").innerHTML='<div class="empty">দাম আনা যায়নি। Apps Script-এ নতুন Code.gs বসিয়ে Deploy → New version দিয়েছেন তো?</div>'}
-  }catch(e){$("plist").innerHTML='<div class="empty">ইন্টারনেট সমস্যা — আবার চেষ্টা করুন</div>'}
-}
-function pCount(){const n=Object.keys(PO).length,d=pDirty();$("pcnt").textContent=n?n+"টির দাম বদলানো":"সব ডিফল্ট দাম";$("psave").disabled=!d;$("psave").textContent=d?"💾 সেভ করুন (অসংরক্ষিত)":"💾 সেভ করুন"}
-function renderPrices(){
-  const q=$("pq").value.trim().toLowerCase(),secs={};
-  PROWS.forEach(r=>{if(q&&!(r.n+" "+r.grp+" "+r.sec).toLowerCase().includes(q))return;((secs[r.sec]=secs[r.sec]||{})[r.grp]=(secs[r.sec][r.grp]||[])).push(r)});
-  const keys=Object.keys(secs);
-  if(!keys.length){$("plist").innerHTML='<div class="empty">কিছু পাওয়া যায়নি</div>';pCount();return}
-  $("plist").innerHTML=keys.map(sec=>{
-    const gs=secs[sec],cnt=Object.values(gs).reduce((a,l)=>a+l.length,0);
-    return `<details class="pg" ${q?"open":""}><summary><span>${esc(sec)}</span><span><small>${cnt}টি</small> <button class="pgp" data-pct="${esc(sec)}" type="button">% বদলান</button></span></summary><div class="pgb">`+
-      Object.keys(gs).map(g=>(g?`<div class="pgt">${esc(g)}</div>`:"")+gs[g].map(rowHTML).join("")).join("")+`</div></details>`}).join("");
-  pCount();
-}
-function rowHTML(r){
-  const v=PO[r.k],ch=v!==undefined;
-  return `<div class="pi ${ch?"ch":""}" data-k="${esc(r.k)}"><div class="nm">${esc(r.n)}${ch?`<small>ডিফল্ট: ৳${r.p}</small>`:""}</div><input type="number" inputmode="decimal" min="0" step="any" value="${ch?v:r.p}"><button class="rs" type="button" title="ডিফল্টে ফেরান">↺</button></div>`}
-function pSet(k,val){
-  const r=PBYK[k];if(!r)return false;
-  const n=Number(val);if(val===""||!isFinite(n)||n<0)return false;
-  const x=Math.round(n*100)/100;
-  if(x===r.p)delete PO[k];else PO[k]=x;
-  return true;
-}
-function pRowUpd(row){
-  const k=row.dataset.k,r=PBYK[k],ch=PO[k]!==undefined;
-  row.classList.toggle("ch",ch);
-  const nm=row.querySelector(".nm"),sm=nm.querySelector("small");
-  if(ch&&!sm)nm.insertAdjacentHTML("beforeend",`<small>ডিফল্ট: ৳${r.p}</small>`);else if(!ch&&sm)sm.remove();
-}
-$("plist").addEventListener("input",e=>{
-  const row=e.target.closest(".pi");if(!row)return;
-  const ok=pSet(row.dataset.k,e.target.value);row.classList.toggle("bad",!ok);if(ok){pRowUpd(row);pCount()}
-});
-$("plist").addEventListener("click",e=>{
-  const rs=e.target.closest(".rs");
-  if(rs){const row=rs.closest(".pi"),k=row.dataset.k;delete PO[k];row.querySelector("input").value=PBYK[k].p;row.classList.remove("bad");pRowUpd(row);pCount();return}
-  const pb=e.target.closest("[data-pct]");
-  if(pb){
-    e.preventDefault();e.stopPropagation();
-    const sec=pb.dataset.pct,s=prompt('"'+sec+'" এর সব দাম কত % বাড়াবেন? (কমাতে মাইনাস দিন, যেমন -10)\nশুধু এই বিভাগের সার্চে দেখানো আইটেমগুলো বদলাবে।',"10");
-    if(s===null)return;const p=Number(s);if(!isFinite(p)||p<=-100||p>500){toast("সঠিক % দিন");return}
-    const q=$("pq").value.trim().toLowerCase();let n=0;
-    PROWS.forEach(r=>{if(r.sec!==sec||(q&&!(r.n+" "+r.grp+" "+r.sec).toLowerCase().includes(q)))return;
-      const cur=PO[r.k]!==undefined?PO[r.k]:r.p,nv=cur*(1+p/100);pSet(r.k,String(nv<20?Math.round(nv*100)/100:Math.round(nv)));n++});
-    renderPrices();toast(n+"টির দাম বদলানো হয়েছে — সেভ করতে ভুলবেন না");
-  }
-});
-$("pq").addEventListener("input",()=>{clearTimeout(PTIMER);PTIMER=setTimeout(renderPrices,200)});
-$("psave").onclick=async()=>{
-  const b=$("psave");b.disabled=true;b.textContent="সেভ হচ্ছে...";
-  try{
-    const d=await api({action:"setPrices",token:TOKEN,prices:PO});
-    if(d.ok){PSAVED=JSON.stringify(PO);toast("✅ নতুন দাম সেভ হয়েছে — সাইটে কয়েক সেকেন্ডে দেখা যাবে")}
-    else if(d.err=="auth")showLogin("সেশন শেষ হয়েছে, আবার লগিন করুন।");
-    else toast("⚠ সেভ হয়নি"+(d.err=="big"?" (অনেক বেশি পরিবর্তন)":"")+" — Code.gs নতুনটা বসিয়েছেন তো?");
-  }catch(e){toast("⚠ ইন্টারনেট সমস্যা — সেভ হয়নি")}
-  pCount();
-};
-$("prst").onclick=()=>{if(!Object.keys(PO).length||!confirm("সব দাম ডিফল্টে ফিরবে (সেভ না করা পর্যন্ত সাইটে বদলাবে না)। নিশ্চিত?"))return;PO={};renderPrices()};
-document.querySelectorAll(".vt [data-v]").forEach(b=>b.onclick=()=>setView(b.dataset.v));
-window.addEventListener("beforeunload",e=>{if(PLOADED&&pDirty()){e.preventDefault();e.returnValue=""}});
+/* ---------- 💰 দাম ম্যানেজমেন্ট ---------- */
+let VIEW="o",PR=[],PFL="all",PQ2="";
+function setView(v){VIEW=v;$("tabO").classList.toggle("on",v=="o");$("tabP").classList.toggle("on",v=="p");
+$("oc").style.display=v=="o"?"":"none";$("list").style.display=v=="o"?"":"none";$("pc").style.display=v=="p"?"":"none";$("plist").style.display=v=="p"?"":"none";
+if(v=="p")loadPriceRows();else $("psave").style.display="none"}
+async function loadPriceRows(){const l=$("plist");l.innerHTML='<div class="empty">লোড হচ্ছে...</div>';
+try{let d=await api({action:"listPrices",token:TOKEN});
+if(!d.ok){if(d.err=="auth"){showLogin("সেশন শেষ হয়েছে, আবার লগিন করুন।");return}throw 0}
+const cat=typeof CATALOG!="undefined"?CATALOG:[],have=new Set(d.rows.map(r=>r.key)),miss=cat.filter(c=>!have.has(c.key));
+if(miss.length){for(let i=0;i<miss.length;i+=100){const s=await api({action:"syncPrices",token:TOKEN,items:miss.slice(i,i+100)});if(!s.ok)throw 0}
+d=await api({action:"listPrices",token:TOKEN});toast("🔄 "+miss.length+"টি পণ্য দামের তালিকায় যোগ হয়েছে")}
+const def={};cat.forEach(c=>{def[c.key]=c.p});
+PR=d.rows.filter(r=>!cat.length||def[r.key]!==undefined).map(r=>({...r,op:r.p,oav:r.av,def:def[r.key]}));renderP()}
+catch(e){l.innerHTML='<div class="empty">দাম লোড করা যায়নি। রিফ্রেশ করে আবার চেষ্টা করুন।</div>'}}
+const chgd=r=>Number(r.p)!==r.op||r.av!==r.oav;
+function visP(){const q=PQ2.trim().toLowerCase();return PR.filter(r=>(PFL=="all"||r.type==PFL)&&(!q||(r.name+" "+r.group+" "+r.key).toLowerCase().includes(q)))}
+function renderP(){const types=[...new Set(PR.map(r=>r.type))];
+$("pchips").innerHTML=`<button class="chip ${PFL=="all"?"on":""}" data-pf="all">সব (${PR.length})</button>`+types.map(t=>`<button class="chip ${PFL==t?"on":""}" data-pf="${esc(t)}">${esc(t)} (${PR.filter(r=>r.type==t).length})</button>`).join("");
+const rows=visP();
+$("plist").innerHTML=rows.slice(0,250).map(r=>`<div class="prow${chgd(r)?" chg":""}${r.av?"":" off"}" data-key="${esc(r.key)}"><div class="pn"><b>${esc(r.name)}</b><small>${esc(r.type)} · ${esc(r.group)}${r.type=="SMM"?" · প্রতি 1K":""}</small></div><div class="pc"><input class="pp" type="number" inputmode="decimal" step="0.01" min="0" value="${esc(r.p)}" data-act="pp"><label class="pav"><input type="checkbox" data-act="pav" ${r.av?"checked":""}> চালু</label></div></div>`).join("")+(rows.length>250?'<div class="empty">আরও '+(rows.length-250)+'টি আছে — সার্চ করে খুঁজুন</div>':"")||'<div class="empty">কিছু পাওয়া যায়নি</div>';
+updSave()}
+function updSave(){const n=PR.filter(chgd).length,b=$("psb");$("psave").style.display=VIEW=="p"&&n?"block":"none";b.textContent="💾 সেভ করুন ("+n+"টি পরিবর্তন)"}
+async function savePrices(){const ch=PR.filter(chgd);if(!ch.length)return;
+if(ch.some(r=>!isFinite(Number(r.p))||Number(r.p)<0)){toast("⚠ সব দাম সঠিক সংখ্যায় দিন");return}
+const b=$("psb");b.disabled=true;b.textContent="সেভ হচ্ছে...";
+try{let n=0;for(let i=0;i<ch.length;i+=100){const d=await api({action:"setPrices",token:TOKEN,changes:ch.slice(i,i+100).map(r=>({key:r.key,p:Number(r.p),av:r.av}))});
+if(!d.ok){if(d.err=="auth"){showLogin("সেশন শেষ হয়েছে, আবার লগিন করুন।");return}throw 0}n+=d.changed}
+ch.forEach(r=>{r.p=Number(r.p);r.op=r.p;r.oav=r.av});toast("✅ "+n+"টি সেভ হয়েছে — সাইটে ১ মিনিটের মধ্যে দেখাবে")}
+catch(e){toast("⚠ সেভ করা যায়নি — আবার চেষ্টা করুন")}
+b.disabled=false;renderP()}
+$("tabO").onclick=()=>setView("o");$("tabP").onclick=()=>setView("p");
+$("pq").addEventListener("input",e=>{PQ2=e.target.value;renderP()});
+$("pchips").addEventListener("click",e=>{const b=e.target.closest("[data-pf]");if(b){PFL=b.dataset.pf;renderP()}});
+$("plist").addEventListener("input",e=>{const t=e.target;if(t.dataset.act!="pp")return;const row=t.closest(".prow"),r=PR.find(x=>x.key==row.dataset.key);if(!r)return;r.p=t.value===""?NaN:Number(t.value);row.classList.toggle("chg",chgd(r));updSave()});
+$("plist").addEventListener("change",e=>{const t=e.target;if(t.dataset.act!="pav")return;const row=t.closest(".prow"),r=PR.find(x=>x.key==row.dataset.key);if(!r)return;r.av=t.checked?1:0;row.classList.toggle("off",!r.av);row.classList.toggle("chg",chgd(r));updSave()});
+$("bulkb").onclick=()=>{const pct=parseFloat($("bulkp").value);if(!isFinite(pct)||pct<=-100||pct>500){toast("সঠিক % দিন (যেমন 5 বা -5)");return}
+const rows=visP();if(!rows.length)return;if(!confirm("এখন দেখানো "+rows.length+"টি পণ্যের দাম "+pct+"% বদলাবেন? (সেভ না করা পর্যন্ত সাইটে বদলাবে না)"))return;
+rows.forEach(r=>{r.p=Math.round(Number(r.p)*(1+pct/100)*100)/100});renderP()};
+$("psb").onclick=savePrices;
+$("prs").onclick=()=>{if(confirm("সব অসংরক্ষিত পরিবর্তন বাতিল করবেন?")){PR.forEach(r=>{r.p=r.op;r.av=r.oav});renderP()}};
 
 if(TOKEN){showApp();load(false)}else showLogin("");
 </script>

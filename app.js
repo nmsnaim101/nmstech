@@ -1,13 +1,5 @@
 /* Top-Up সেকশনের ছবি (ছোট করে কোডের ভেতরেই বসানো) */
-const TUIMG={
-  monthly:"img/img-537746ac.webp",
-  weekly:"img/img-c9681e97.webp",
-  likes:"img/img-88dfad29.webp",
-  chest:"img/img-994d49d0.webp",
-  levelup:"img/img-5b43b17a.webp",
-  indo:"img/img-3f20173b.webp",
-  guild:"img/img-3f819bbc.webp"
-};
+const TUIMG={friday:"img/img-289754fb.webp",combo:"img/img-ba8bcab5.webp",lite:"img/img-e3570996.webp",chest:"img/img-603a361b.webp",likes:"img/img-da8c8bcc.webp",levelup:"img/img-ea99437b.webp",indo:"img/img-9b9bbe58.webp",guild:"img/img-0090b54d.webp",monthly:"img/img-ba8bcab5.webp",weekly:"img/img-ba8bcab5.webp"};
 
 const WA=NMS.wa,DEMO="https://drive.google.com/drive/folders/1bS0eeQh4v-p7su13OREpi4uJg1f0Nynq?usp=sharing";
 const dg=(n,d,l)=>({n,d,p:PRICE_DIGITAL[n],k:'digital',demo:l});
@@ -47,7 +39,6 @@ t("🎫 Membership","mem"),
 t("🎁 Weekly / Monthly Lite Offer","mem"),
 t("🚀 Level Up Pass","pass"),
 t("🇮🇩 Indonesia UID TopUp","uid"),
-t("🎫 Booyah Pass","pass"),
 t("🇮🇩 Indonesia Membership","mem"),
 t("🏆 FF Guild Glory","pass")];
 const SP=PRICE_SPECIAL;
@@ -60,11 +51,24 @@ const isFri=()=>new Intl.DateTimeFormat("en-US",{weekday:"long",timeZone:"Asia/D
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $=id=>document.getElementById(id);let QUIET=0,cur=(location.hash&&TABS.some(t=>"#"+t[0]==location.hash)?location.hash.slice(1):"home"),ST={smm:Object.keys(SMM)[0],sub:"All"},Q="";
 const reg=[];const reg_=o=>{reg.push(o);return reg.length-1};
-function card(n,d,p,extra,ord,unit){const i=reg_(ord);return `<div class="card">${media(ord)}<h3>${esc(n)}</h3>${d?`<p>${esc(d)}</p>`:""}<div class="price">৳${p}${unit||""}</div><div class="row">${extra||""}<button class="btn" onclick="openOrder(${i})">Order Now</button></div></div>`}
+const priceKey=o=>{const k=o.k;if(k=='digital')return'digital|'+o.n;if(k=='sub')return'sub|'+o.c+'|'+o.n;if(k=='special')return'special|'+o.n;if(k=='smm'){const m=/ — (\S+) /.exec(o.n);return'smm|'+o.c+'|'+(m?m[1]:o.n)}return'topup|'+o.n};
+let PRICES={},OFF=new Set();
+function applyPrices(m){if(!m)return false;let ch=false;const off=new Set(Object.keys(m).filter(k=>m[k].av===0));
+if(off.size!=OFF.size||[...off].some(k=>!OFF.has(k)))ch=true;PRICES=m;OFF=off;
+const P=(k,c)=>{const r=m[k];if(r&&r.p!=null&&isFinite(Number(r.p))&&Number(r.p)!==c){ch=true;return Number(r.p)}return c};
+D.forEach(x=>{x.p=P('digital|'+x.n,x.p)});
+SUB.forEach(x=>{x.p=P('sub|'+x.c+'|'+x.n,x.p)});
+TU.forEach(g=>g.a.forEach(i=>{i[1]=P('topup|'+g.g+' — '+i[0],i[1])}));
+SP.forEach(g=>g[1].forEach(i=>{i[1]=P('special|'+g[0]+' — '+i[0],i[1])}));
+Object.entries(SMM).forEach(([pl,l])=>l.forEach(([c,it])=>it.forEach(x=>{x[2]=P('smm|'+pl+'|'+x[0],x[2])})));return ch}
+function loadPrices(){try{const c=JSON.parse(localStorage.getItem("nms_prices")||"null");if(c&&c.m&&Date.now()-c.t<6048e5)applyPrices(c.m)}catch(e){}
+if(!NMS.orderUrl)return;
+fetch(NMS.orderUrl+"?action=prices").then(r=>r.json()).then(d=>{if(d&&d.ok&&d.prices){const ch=applyPrices(d.prices);try{localStorage.setItem("nms_prices",JSON.stringify({t:Date.now(),m:d.prices}))}catch(e){}if(ch)render()}}).catch(()=>{})}
+function card(n,d,p,extra,ord,unit){const i=reg_(ord);return `<div class="card">${media(ord)}<h3>${esc(n)}</h3>${d?`<p>${esc(d)}</p>`:""}<div class="price">৳${p}${unit||""}</div>${OFF.has(priceKey(ord))?'<span class="out">🔴 Out of Stock</span><div class="row"><button class="btn" disabled>Order Now</button></div>':`<div class="row">${extra||""}<button class="btn" onclick="openOrder(${i})">Order Now</button></div>`}</div>`}
 let TOP=0;const TABIDS=TABS.map(t=>t[0]),TTL={home:"NMS Tech Bangla — ডিজিটাল প্রোডাক্ট, সাবস্ক্রিপশন, Free Fire টপ-আপ ও SMM সার্ভিস",digital:"Digital Products — NMS Tech Bangla",smm:"SMM Panel — NMS Tech Bangla",sub:"Premium Subscription — NMS Tech Bangla",topup:"Free Fire Top-Up — NMS Tech Bangla",special:"Special Services — NMS Tech Bangla",ai:"AI Agent — NMS Tech Bangla",trust:"Reviews & Payment Proof — NMS Tech Bangla"};
 function go(v,np){cur=v;Q="";TOP=1;if(!np&&location.hash!=="#"+v)history.pushState({t:v},"","#"+v);render()}
 addEventListener("popstate",()=>{if($("modal").classList.contains("on")){closeM(1);return}const t=location.hash.slice(1);if(t&&!TABIDS.includes(t))return;const v=t||"home";if(v!==cur)go(v,1)});
-function render(){if(0&&!QUIET&&document.startViewTransition&&!matchMedia("(prefers-reduced-motion:reduce)").matches)document.startViewTransition(()=>_render());else _render()}
+function render(){if(!QUIET&&document.startViewTransition&&!matchMedia("(prefers-reduced-motion:reduce)").matches)document.startViewTransition(()=>_render());else _render()}
 function _render(){document.title=TTL[cur]||document.title;if(TOP){scrollTo(0,0);TOP=0}reg.length=0;$("nav").innerHTML=TABS.map(([k,l])=>`<a class="${k==cur?'on':''}" href="#${k}" onclick="go('${k}');return false">${l}</a>`).join("");{const n=$("nav"),a=n.querySelector(".on");if(a)n.scrollLeft=a.offsetLeft-(n.clientWidth-a.offsetWidth)/2}
 const v={home,digital,smm,sub,topup,special,ai,trust}[cur];const A=$("app");A.innerHTML=v();A.classList.toggle("q",QUIET);if(!QUIET){A.classList.remove("pg");void A.offsetWidth;A.classList.add("pg")}QUIET=0;A.querySelectorAll(".grid .card").forEach((c,i)=>c.style.setProperty("--i",i%12));
 if(cur=="ai")$("aq").focus();post()}
@@ -105,12 +109,11 @@ function smm(){const P=Object.keys(SMM);let h=`<h1 class="pt">B — SMM Panel</h
 SMM[ST.smm].forEach(([c,l])=>{const it=l.filter(x=>m(x[0]+x[1]));if(it.length)h+=`<h4>${c}</h4><div class="grid">${it.map(x=>card(x[1],"Package ID: "+x[0],x[2],"",{n:ST.smm+" "+c+" — "+x[0]+" "+x[1],p:x[2],k:'smm',c:ST.smm},"/1K")).join("")}</div>`});return h}
 function sub(){const cats=["All",...new Set(SUB.map(x=>x.c))];return `<h1 class="pt">C — Subscription</h1><div class="tabs">${cats.map(c=>`<span role="button" tabindex="0" class="tab ${c==ST.sub?'on':''}" onclick="ST.sub='${c}';render()">${c}</span>`).join("")}</div>${srch("🔍 Search (e.g. Canva)...")}<div class="grid">${SUB.filter(x=>(ST.sub=="All"||x.c==ST.sub)&&m(x.n)).map(x=>card(x.n,x.c,x.p,"",x)).join("")||"<p>আপনার search-এর সাথে মিলছে এমন কোনো product পাওয়া যায়নি।</p>"}</div>
 <div class="card" style="margin-top:12px"><h3>আপনার প্রয়োজনীয় Subscription খুঁজে পাচ্ছেন না?</h3><div class="row"><a class="btn" target="_blank" rel="noopener" href="https://t.me/${NMS.tg}">📲 Telegram — @${NMS.tg}</a></div></div>`}
-const tuImg=o=>{if(!o||!['uid','mem','likes','pass','friday'].includes(o.k)||typeof TUIMG=='undefined')return"";const it=o.n.split(" — ").slice(1).join(" — ")||"",g=o.c||o.n.split(" — ")[0];
-const k=/monthly membership/i.test(it)?'monthly':/weekly membership/i.test(it)?'weekly':null;return k&&TUIMG[k]||""};
-const tuGK=g=>/Indonesia/.test(g)?'indo':/Guild/.test(g)?'guild':/Level Up/.test(g)?'levelup':/UID TopUp BD/.test(g)?'chest':/Free Fire Likes/.test(g)?'likes':null;
+const tuImg=o=>{if(!o||!['uid','mem','likes','pass','friday'].includes(o.k)||typeof TUIMG=='undefined')return"";const g=o.c||o.n.split(" — ")[0],k=tuGK(g);return k&&TUIMG[k]||""};
+const tuGK=g=>/Friday/.test(g)?'friday':/Indonesia/.test(g)?'indo':/Guild/.test(g)?'guild':/Level Up/.test(g)?'levelup':/UID TopUp BD/.test(g)?'chest':/Free Fire Likes/.test(g)?'likes':/Lite Offer/.test(g)?'lite':/Membership/.test(g)?'combo':null;
 const tuBanner=g=>{const k=typeof TUIMG!='undefined'&&tuGK(g.g);if(!k||!TUIMG[k])return'';const pr=g.a.map(x=>x[1]);return `<div class="tub"><img loading="lazy" decoding="async" class="tbg" alt="" src="${TUIMG[k]}"><img loading="lazy" decoding="async" class="tbi" alt="${esc(g.g)}" src="${TUIMG[k]}"><div class="tbt"><b>${esc(g.g.replace(/ \(.*\)/,''))}</b><span>${g.a.length}টি আইটেম · ৳${Math.min(...pr)} থেকে</span></div></div>`};
-const TUG=[["monthly","Monthly Membership",3],["weekly","Weekly Membership",3],["chest","Diamond Top-Up",2],["likes","Free Fire Likes",1],["levelup","Level Up Pass",5],["indo","Indonesia Top-Up",6],["guild","Guild Glory",9]];
-const tuGallery=()=>typeof TUIMG=='undefined'?'':`<div class="tug">${TUG.filter(x=>TUIMG[x[0]]).map(([k,t,gi],i)=>`<a role="button" tabindex="0" style="--i:${i}" href="#" onclick="tuJump(${gi});return false" onkeydown="if(event.key=='Enter')tuJump(${gi})"><img loading="lazy" alt="${t}" src="${TUIMG[k]}" style="object-fit:${k=='likes'?'contain':'cover'}"><b>${t}</b></a>`).join('')}</div>`;
+const TUG=[["friday","Friday Offer",0],["combo","Weekly / Monthly",3],["lite","Weekly Lite",4],["chest","UID TopUp BD",2],["likes","Free Fire Likes",1],["levelup","Level Up Pass",5],["indo","Indonesia Top-Up",6],["guild","Guild Glory",8]];
+const tuGallery=()=>typeof TUIMG=='undefined'?'':`<div class="tug">${TUG.filter(x=>TUIMG[x[0]]).map(([k,t,gi],i)=>`<a role="button" tabindex="0" style="--i:${i}" href="#" onclick="tuJump(${gi});return false" onkeydown="if(event.key=='Enter')tuJump(${gi})"><img loading="lazy" alt="${t}" src="${TUIMG[k]}" style="object-fit:cover"><b>${t}</b></a>`).join('')}</div>`;
 function tuJump(i){const e=document.getElementById('tg'+i);if(e)e.scrollIntoView({behavior:'smooth',block:'start'})}
 function topup(){return `<h1 class="pt">D — Top-Up</h1>${srch("🔍 Search (e.g. 1010 Diamond)...")}${Q?'':tuGallery()}`+[...TU].sort((a,b)=>((a.o=='friday'&&!isFri())?1:0)-((b.o=='friday'&&!isFri())?1:0)).map(g=>{const it=g.a.filter(x=>m(x[0]+g.g));if(!it.length)return"";const fr=g.o=='friday',av=!fr||isFri();return `<h4 id="tg${TU.indexOf(g)}">${g.g.replace(/ \(.*\)/,'')}</h4>${tuBanner(g)}<div class="grid">${it.map(x=>av?card(x[0],"",x[1],'<span class="in" style="font-size:12px;align-self:center">🟢 Available</span>',{n:g.g+" — "+x[0],p:x[1],k:g.o,c:g.g}):`<div class="card">${media({n:g.g+" — "+x[0],p:x[1],k:g.o,c:g.g})}<h3>${esc(x[0])}</h3><div class="price">৳${x[1]}</div><span class="out" style="color:var(--gold)">🗓 শুধু শুক্রবার চালু থাকে</span><div class="row"><button class="btn" disabled>Order Now</button></div></div>`).join("")}</div>`}).join("")}
 function special(){return `<h1 class="pt">F — Special Service with NMS Tech</h1>`+SP.map(([g,l],gi)=>`<h4>${g}</h4><div class="grid">${l.map(x=>card(x[0],"",x[1],gi<2?`<a class="btn s" target="_blank" rel="noopener" href="${DEMO}">👁️ Demo</a>`:"",{n:g+" — "+x[0],p:x[1],k:'special',c:g}).replace("Order Now","📲 Direct Deal on WhatsApp")).join("")}</div>`).join("")}
@@ -148,7 +151,7 @@ SUB.forEach(x=>a.push({n:x.n,p:x.p,t:'Subscription',tb:'sub',g:x.c,x:'',o:x,av:1
 TU.forEach(g=>g.a.forEach(i=>a.push({n:i[0]+' ('+g.g.replace(/ \(.*\)/,'')+')',p:i[1],t:'Top-Up',tb:'topup',g:g.g,x:'',o:{n:g.g+" — "+i[0],p:i[1],k:g.o,c:g.g},av:g.o!='friday'||fri})));
 SP.forEach((g,gi)=>g[1].forEach(i=>a.push({n:i[0]+' ('+g[0]+')',p:i[1],t:'Service',tb:'special',g:g[0],x:'Direct Deal — WhatsApp',o:{n:g[0]+" — "+i[0],p:i[1],k:'special',c:g[0]},av:1,demo:gi<2?DEMO:null})));
 Object.entries(SMM).forEach(([pl,l])=>l.forEach(([c,it])=>it.forEach(i=>a.push({n:pl+' '+c+': '+i[1],p:i[2],t:'SMM',tb:'smm',g:pl+' '+c,x:'ID '+i[0],o:{n:pl+" "+c+" — "+i[0]+" "+i[1],p:i[2],k:'smm',c:pl},av:1}))));
-a.forEach(it=>{const h=(it.n+' '+it.t+' '+it.g+' '+it.x+' '+(KW[it.t]||'')).toLowerCase().replace(/(\d),(?=\d)/g,'$1').replace(/[-–—_/|()+:,.&]/g,' ');it.hs=h;it.hw=h.split(/[^\p{L}\p{M}\p{N}]+/u).filter(Boolean).map(stem)});
+a.forEach(it=>{if(OFF.has(priceKey(it.o)))it.av=0;const h=(it.n+' '+it.t+' '+it.g+' '+it.x+' '+(KW[it.t]||'')).toLowerCase().replace(/(\d),(?=\d)/g,'$1').replace(/[-–—_/|()+:,.&]/g,' ');it.hs=h;it.hw=h.split(/[^\p{L}\p{M}\p{N}]+/u).filter(Boolean).map(stem)});
 return a};
 const AIREG=[];const aiReg=o=>{let i=AIREG.indexOf(o);if(i<0)i=AIREG.push(o)-1;return i};
 function aiOrder(i){const o=AIREG[i];if(o)openOrder(reg_(o))}
@@ -205,7 +208,7 @@ const USE=[
 [/student|ছাত্র|স্টুডেন্ট|পড়া|স্কুল|কলেজ|পরীক্ষা|exam|study/,"📚 পড়াশোনার জন্য ভালো অপশন",["All-Class Package","Premium PDF Books","Website Course Collection","Canva Pro Education","Grammarly Premium — 1 Month"]],
 [/freelanc|ফ্রিল্যান্স|ফ্রিলান্স|office work|অফিসের কাজ/,"💼 ফ্রিল্যান্সিং / অফিসের কাজের জন্য",["Complete Software","ChatGPT Plus","Canva Premium","BD + India + Pakistan","Microsoft Office"]],
 [/youtuber|ইউটিউবার|content|কনটেন্ট|creator|ক্রিয়েটর|video edit|reels|tiktoker|vlog/,"🎬 কনটেন্ট ক্রিয়েটরদের জন্য",["Reels Bundle","CapCut Premium — 1 Month","Canva Premium","Reels (🎬 Video Editing","YouTube Premium Renewable"]],
-[/gamer|gaming|গেম|free fire|ফ্রি ফায়ার|diamond|ডায়মন্ড/,"🎮 Free Fire প্লেয়ারদের জন্য",["Weekly Membership (🎫 Membership)","1010 Diamond (💎 UID TopUp BD","Booyah Pass","Level Up Pass"]],
+[/gamer|gaming|গেম|free fire|ফ্রি ফায়ার|diamond|ডায়মন্ড/,"🎮 Free Fire প্লেয়ারদের জন্য",["Weekly Membership (🎫 Membership)","1010 Diamond (💎 UID TopUp BD","Level Up Pass"]],
 [/movie|সিনেমা|ওটিটি|ott|web ?series|ওয়েব সিরিজ|দেখতে|entertain|বিনোদন|series/,"🍿 সিনেমা / সিরিজ দেখার জন্য",["Netflix Non Renewable — 1 Month","Amazon Prime — 1 Month","Hoichoi — 1 Month","Chorki — 1 Month","Spotify — 1 Month"]],
 [/vpn|privacy|প্রাইভেসি|নিরাপদ|safe browsing|geo/,"🔐 VPN / প্রাইভেসির জন্য",["Surfshark VPN — 1 Month","Nord VPN — 1 Month","Panda VPN — 1 Month","HMA VPN — 1 Month","CyberGhost VPN — 1 Month"]],
 [/\bai\b|artificial|এআই|chatbot|ai tool/,"🤖 AI টুলের জন্য",["ChatGPT Plus Premium — 1 Month","Gemini Premium — 1 Month","Gemini Pro + 5TB"]],
@@ -362,7 +365,7 @@ return `<div class="aititle">${ailogo(42,'ailt')}<h1 class="pt">NMS Tech <span c
 
 const PL={"Telegram": "img/img-edff7f1f.webp", "Facebook": "img/img-200d9228.webp", "YouTube": "img/img-f0038e60.webp", "Instagram": "img/img-287bada1.webp", "Twitter/X": "img/img-0bcbd8bb.webp", "Spotify": "img/img-2a45cfec.webp", "TikTok": "img/img-2c390246.webp", "LinkedIn": "img/img-4fd971b2.webp", "Discord": "img/img-faa1b31c.webp", "Website Traffic": "img/img-79131957.webp", "WhatsApp": "img/img-b2680e93.webp"};
 const SL={"Netflix": "img/img-470cbe7b.webp", "Amazon Prime": "img/img-e6b18333.webp", "Zee5": "img/img-7f7134b8.webp", "Hoichoi": "img/img-27043984.webp", "Chorki": "img/img-d9bb93ca.webp", "Bongo": "img/img-0352fcd8.webp", "T-Sports": "img/img-9f4c97b1.webp", "Crunchyroll": "img/img-ff4e0a8a.webp", "KLiKK": "img/img-357dfda5.webp", "Spotify": "img/img-ffcee106.webp", "Gemini": "img/img-ccb88417.webp", "ChatGPT": "img/img-ff08b50f.webp", "Canva": "img/img-59968607.webp", "CapCut": "img/img-e077529f.webp", "Grammarly": "img/img-07788508.webp", "Google Drive": "img/img-90ece22c.webp", "Google One": "img/img-bae28ed1.webp", "TeraBox": "img/img-e15c67a4.webp", "YouTube": "img/img-d8a3d8a9.webp", "TrueCaller": "img/img-550ec129.webp", "Surfshark": "img/img-387114fa.webp", "Panda": "img/img-72e0eea6.webp", "HMA": "img/img-8fdf1409.webp", "Nord": "img/img-008028d5.webp", "CyberGhost": "img/img-f518519c.webp", "Windows 10": "img/img-5914e901.webp", "Windows 11": "img/img-f5677c80.webp", "Microsoft Office": "img/img-cbc0f3d8.webp"};
-const SV={"Reels": {"u": "img/img-c2d6cb67.webp", "f": "cover"}, "Shorts": {"u": "img/img-8f71fddf.webp", "f": "contain"}, "Promotional Video": {"u": "img/img-d564fe3a.webp", "f": "contain"}, "Model — 5 Videos": {"u": "img/img-9b8e5db8.webp", "f": "cover", "p": "50% 22%"}, "AI Model দিয়ে Professional Video (প্রতি Video)": {"u": "img/img-13dd7011.webp", "f": "cover", "p": "60% 40%"}};SV["Page Setup + Marketing / Ad Campaign Management"]={u:PL.Facebook,f:"contain"};
+const SV={"Reels":{"u":"img/img-e0245022.webp","f":"cover"},"Shorts":{"u":"img/img-6defba9b.webp","f":"cover"},"Promotional Video":{"u":"img/img-07b816e0.webp","f":"cover"},"Model — 5 Videos":{"u":"img/img-94e89a79.webp","f":"cover"},"AI Model দিয়ে Professional Video (প্রতি Video)":{"u":"img/img-5f21a7ab.webp","f":"cover"},"Page Setup + Marketing / Ad Campaign Management":{"u":"img/img-385708e1.webp","f":"cover"}};
 const IMGS={"🏆 Mega Master Bundle": "img/img-7d9879a8.webp", "💻 Complete Software & Apps": "img/img-48a390a1.webp", "📚 10,000+ Premium PDF Books": "img/img-d5eb21c1.webp", "🎨 5,000+ Editable Word/PSD/EPS/Vector": "img/img-90dffd49.webp", "🎒 Play → Class 12 All-Class Package": "img/img-a1f34f73.webp", "🌍 69+ Countries PSD File": "img/img-6e7ee899.webp", "🎬 10 Lakhs+ / 20TB+ Reels Bundle": "img/img-7657a7ed.webp", "🌐 Website Course Collection": "img/img-2c9cf881.webp", "🚀 BD + India + Pakistan 2,000+ Courses": "img/img-9ac44401.webp"};/* এখানে ছবি বসবে: "প্যাকেজের নাম":"data:image/..." */
 const BR=[["Netflix","#e50914","N"],["Amazon Prime","#00a8e1","P"],["Zee5","#8230c6","Z"],["Hoichoi","#e8282b","H"],["Chorki","#ff4d6d","C"],["Bongo","#ff6a00","B"],["T-Sports","#0a8f4f","T"],["Crunchyroll","#f47521","C"],["KLiKK","#7c3aed","K"],["Spotify","#1db954","S"],["Gemini","#4f8cff","G"],["ChatGPT","#10a37f","C"],["Canva","#00c4cc","C"],["CapCut","#222","C"],["Grammarly","#15c39a","G"],["Google Drive","#fbbc04","D"],["Google One","#4285f4","1"],["TeraBox","#1e90ff","T"],["YouTube","#ff0000","▶"],["TrueCaller","#0a84ff","T"],["Surfshark","#1ebfd0","S"],["Panda","#ff7a00","P"],["HMA","#e6b800","H"],["Nord","#4687ff","N"],["CyberGhost","#d4a800","C"],["Windows 10","#0078d4","W"],["Windows 11","#0078d4","W"],["Microsoft Office","#d83b01","O"]];
 function media(o){if(!o||!o.n)return"";const im=IMGS[o.n]||IMGS[o.n.split(" — ")[0]];if(im)return`<div class="media im"><img loading="lazy" alt="${esc(o.n)}" src="${im}"></div>`;
@@ -375,16 +378,16 @@ let SHOT=null;
 function pv(i){const f=i.files[0],e=$("shp");if(f&&f.type.startsWith("image/")&&f.size<=8e6){e.src=URL.createObjectURL(f);e.classList.add("on")}else{e.classList.remove("on");i.value="";if(f)$("err").textContent="শুধু ছবি (৮MB পর্যন্ত) দিন।"}}
 async function shareShot(){try{if(navigator.canShare&&navigator.canShare({files:[SHOT]})){await navigator.share({files:[SHOT],text:"NMS Tech — Payment Screenshot"})}else alert("WhatsApp-এ অর্ডার মেসেজ পাঠানোর পর চ্যাটের 📎 থেকে এই স্ক্রিনশটটি যুক্ত করুন।")}catch(e){}}
 
-const IO=window.IntersectionObserver?new IntersectionObserver(es=>{es.filter(e=>e.isIntersecting).forEach((e,i)=>{e.target.style.setProperty("--d",Math.min(i,8)*30+"ms");e.target.classList.add("rv");IO.unobserve(e.target)})},{rootMargin:"0px 0px -6% 0px",threshold:.06}):null;
+const IO=window.IntersectionObserver?new IntersectionObserver(es=>{es.filter(e=>e.isIntersecting).forEach((e,i)=>{e.target.style.setProperty("--d",Math.min(i,8)*80+"ms");e.target.classList.add("rv");IO.unobserve(e.target)})},{rootMargin:"0px 0px -6% 0px",threshold:.06}):null;
 function post(){const A=$("app");A.querySelectorAll(".card").forEach(c=>{if(!c.querySelector(".gl"))c.insertAdjacentHTML("beforeend",'<i class="gl"></i>')});
 const q=A.classList.contains("q");A.querySelectorAll("h2,h4,.card,.hero").forEach(e=>{if(q||!IO)e.classList.add("rev","rv");else{e.classList.add("rev");IO.observe(e)}});
-A.querySelectorAll(".media img").forEach((im,i)=>setTimeout(()=>im.classList.add("ld"),i%8*30))}
-let LC=null,RAF=0,PE=null;const FP=false;
+A.querySelectorAll(".media img").forEach((im,i)=>setTimeout(()=>im.classList.add("ld"),150+i%8*80))}
+let LC=null,RAF=0,PE=null;const FP=matchMedia("(hover:hover) and (pointer:fine)").matches;
 function rc(c){c.style.removeProperty("--rx");c.style.removeProperty("--ry")}
 if(FP)document.addEventListener("pointermove",e=>{PE=e;if(RAF)return;RAF=requestAnimationFrame(()=>{RAF=0;const c=PE.target.closest&&PE.target.closest("#app .card");if(LC&&LC!==c)rc(LC);LC=c;if(!c)return;const b=c.getBoundingClientRect(),x=(PE.clientX-b.left)/b.width,y=(PE.clientY-b.top)/b.height;c.style.setProperty("--ry",((x-.5)*9).toFixed(2)+"deg");c.style.setProperty("--rx",((.5-y)*9).toFixed(2)+"deg");c.style.setProperty("--mx",x*100+"%");c.style.setProperty("--my",y*100+"%")})});
 document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest(".btn");if(!b||b.disabled)return;const r=b.getBoundingClientRect(),s=document.createElement("span");s.className="rp";s.style.left=e.clientX-r.left+"px";s.style.top=e.clientY-r.top+"px";b.appendChild(s);setTimeout(()=>s.remove(),800)});
 let SC=0;addEventListener("scroll",()=>{if(SC)return;SC=requestAnimationFrame(()=>{SC=0;const h=document.documentElement,m=h.scrollHeight-innerHeight;$("spb").style.setProperty("--p",m>0?Math.min(1,scrollY/m):0);document.querySelector("header").classList.toggle("sc",scrollY>24)})},{passive:true});
-$("spi").src=document.querySelector(".lg").src;setTimeout(()=>{const x=$("sp");x&&x.remove()},1300);
+$("spi").src=document.querySelector(".lg").src;setTimeout(()=>{const x=$("sp");x&&x.remove()},2100);
 let OD=null,ORD=null;
 /* অর্ডার Google Sheet-এ পাঠানো (NMS.orderUrl খালি থাকলে কিছু হয় না; ব্যর্থ হলেও WhatsApp অর্ডার চলবে) */
 const OIDRE=/^NMS-\d{6}-[A-Z0-9]{4}$/;
@@ -397,14 +400,15 @@ await fetch(NMS.orderUrl,{method:"POST",mode:"no-cors",keepalive:true,headers:H,
 const d=shot||await new Promise(r=>setTimeout(()=>r(ORD.shot),1500));
 if(d)await fetch(NMS.orderUrl,{method:"POST",mode:"no-cors",headers:H,body:JSON.stringify({shotFor:ORD.id,shot:d})})}catch(e){}}
 async function confirmOrder(){const b=$("cbtn");if(!b||b.disabled||!ORD)return;b.disabled=true;b.textContent="পাঠানো হচ্ছে...";
-const{shot,link,msg,sent,...o}=ORD,H={"Content-Type":"text/plain;charset=utf-8"};let ok=false;
-try{const ac=new AbortController(),t=setTimeout(()=>ac.abort(),20000);const r=await fetch(NMS.orderUrl,{method:"POST",headers:H,body:JSON.stringify(o),signal:ac.signal});clearTimeout(t);const d=await r.json();ok=!!(d&&d.ok)}catch(e){ok=false}
-if(!ok){orderFail();return}
+const{shot,link,msg,sent,...o}=ORD,H={"Content-Type":"text/plain;charset=utf-8"};let ok=false,err="";
+try{const ac=new AbortController(),t=setTimeout(()=>ac.abort(),20000);const r=await fetch(NMS.orderUrl,{method:"POST",headers:H,body:JSON.stringify(o),signal:ac.signal});clearTimeout(t);const d=await r.json();ok=!!(d&&d.ok);err=(d&&d.err)||""}catch(e){ok=false}
+if(!ok){if(err=="price"||err=="unavail"){orderStale(err);return}orderFail();return}
 ORD.sent=1;try{localStorage.setItem("nms_orders",JSON.stringify([ORD.id,...myIds()].slice(0,5)))}catch(e){}
 orderDone();
 if(SHOT){const d=ORD.shot||await new Promise(r=>setTimeout(()=>r(ORD.shot),1500)),set=t=>{const e=$("shs");if(e)e.textContent=t},bad="⚠ স্ক্রিনশট জমা হয়নি — চাইলে WhatsApp-এ পাঠিয়ে দিন";
 if(!d)set(bad);else fetch(NMS.orderUrl,{method:"POST",headers:H,body:JSON.stringify({shotFor:ORD.id,shot:d})}).then(r=>r.json()).then(x=>set(x&&x.ok?"✅ স্ক্রিনশট জমা হয়েছে":bad)).catch(()=>set(bad))}}
 function orderDone(){$("box").innerHTML=`<h3>✅ অর্ডার জমা হয়েছে</h3><div class="sum"><div style="font-size:13px;color:var(--mu)">আপনার Order ID</div><b style="font-size:22px">${ORD.id}</b> <button type="button" class="cp" onclick="cp('${ORD.id}',this)">📋 কপি</button><br><small>এই আইডি দিয়ে সাইটের "অর্ডার স্ট্যাটাস" থেকে অর্ডারের অবস্থা দেখতে পারবেন।</small></div>${SHOT?'<p id="shs" style="font-size:13px;margin:0 0 10px">⏳ স্ক্রিনশট জমা হচ্ছে...</p>':""}<p style="color:var(--mu);font-size:14px;margin:0 0 10px">আমরা পেমেন্ট যাচাই করে অর্ডার প্রসেস করব। দ্রুত প্রসেসিংয়ের জন্য চাইলে অর্ডারটি WhatsApp-এ পাঠাতে পারেন।</p><a class="btn" style="display:block;text-align:center;margin-bottom:10px" target="_blank" rel="noopener" href="${ORD.link}">⚡ দ্রুত প্রসেসিংয়ের জন্য WhatsApp-এ পাঠান</a><div class="row"><button class="btn s" onclick="closeM()">Close</button><button class="btn s" onclick="openTrack('${ORD.id}')">📦 স্ট্যাটাস দেখুন</button></div>`}
+function orderStale(e){const u=e=="unavail";$("box").innerHTML=`<h3>${u?"🔴 পণ্যটি এখন বন্ধ আছে":"⚠ দাম হালনাগাদ হয়েছে"}</h3><div class="sum">${u?"দুঃখিত, এই পণ্যটি সাময়িকভাবে বন্ধ আছে। অন্য পণ্য বেছে নিন।":"এই পণ্যের দাম বদলে গেছে। পাতা রিফ্রেশ করে নতুন দামে আবার অর্ডার করুন।"}</div><button class="btn" style="width:100%" onclick="${u?"closeM()":"try{localStorage.removeItem('nms_prices')}catch(x){}location.reload()"}">${u?"ঠিক আছে":"🔄 রিফ্রেশ করুন"}</button>`}
 function orderFail(){$("box").innerHTML=`<h3>⚠ অর্ডার জমা করা যায়নি</h3><div class="sum">ইন্টারনেট বা সার্ভারে সমস্যা হয়েছে। আপনার Order ID: <b>${ORD.id}</b></div><p style="color:var(--mu);font-size:14px;margin:0 0 10px">আবার চেষ্টা করুন, অথবা অর্ডারটি সরাসরি WhatsApp-এ পাঠিয়ে দিন।</p><button class="btn" id="cbtn" style="width:100%;margin-bottom:10px" onclick="confirmOrder()">🔄 আবার চেষ্টা করুন</button><a class="btn s" style="display:block;text-align:center" target="_blank" rel="noopener" href="${ORD.link}">📲 WhatsApp-এ পাঠান</a><div class="row" style="margin-top:10px"><button class="btn s" onclick="closeM()">Close</button></div>`}
 function openTrack(pre){const ids=myIds();
 $("box").innerHTML=`<h3>📦 অর্ডার স্ট্যাটাস</h3><label>আপনার Order ID</label><input id="tid" placeholder="NMS-261020-A1B2" value="${esc(pre||"")}">${ids.length?`<div class="row" style="margin:8px 0">${ids.map(i=>`<button class="btn s" style="padding:6px 10px" onclick="$('tid').value='${i}';trackOrder()">${i}</button>`).join("")}</div>`:""}<div id="tres" class="sum" style="display:none"></div><div class="row"><button class="btn s" onclick="closeM()">Close</button><button class="btn" onclick="trackOrder()">স্ট্যাটাস দেখুন</button></div>`;
@@ -429,7 +433,7 @@ function openPick(keep){PICK=1;if(!keep){PQ="";PCT="all";PALL=null}
 $("box").innerHTML=`<h3>🛒 কী অর্ডার করবেন?</h3><input id="pks" placeholder="পণ্যের নাম লিখুন (যেমন Netflix, 1010 Diamond, Followers)" value="${esc(PQ)}" oninput="PQ=this.value;pickList()" autocomplete="off"><div class="pkc">${PCATS.map(([k,l])=>`<button type="button" class="pkch ${PCT==k?"on":""}" onclick="PCT='${k}';openPick(1)">${l}</button>`).join("")}</div><div id="pkl" class="pkl"></div><div class="row"><button class="btn s" onclick="closeM()">Cancel</button></div>`;
 mOpen();pickList();if(!matchMedia("(pointer:coarse)").matches)$("pks").focus()}
 function pickOrder(i){const it=PK[i];if(it)openOrder(reg_(it.o))}
-function openOrder(i){OD=reg[i]||null;SHOT=null;if(!OD)return;const k=OD.k,f=FIELDS[k]||FIELDS.mem,sp=k=='special';
+function openOrder(i){OD=reg[i]||null;SHOT=null;if(!OD)return;if(OFF.has(priceKey(OD))){alert("এই পণ্যটি এখন বন্ধ আছে। অন্য পণ্য বেছে নিন।");return}const k=OD.k,f=FIELDS[k]||FIELDS.mem,sp=k=='special';
 $("box").innerHTML=`${PICK?'<a class="bk" href="#" role="button" onclick="openPick(1);return false">← অন্য পণ্য বাছুন</a>':""}<h3>${esc(OD.n)}</h3><div class="price">৳${OD.p}${k=='smm'?' / 1K':''}</div>
 <form onsubmit="return false" id="of">${f.map(([l,ty,opt],j)=>ty=="area"?`<label>${l}</label><textarea id="f${j}" rows="3"></textarea>`:`<label>${l}</label><input id="f${j}" type="${ty||'text'}" ${opt?'':'data-req="1"'} ${/^Quantity/.test(l)?`inputmode="numeric" min="1" oninput="bill()" ${k=='smm'?'placeholder="যেমন 1000"':'value="1"'}`:''}>`).join("")}
 ${sp?"":`<div class="sum bill" id="bill"></div><div class="sum">bKash Send Money: <b>${NMS.bkash}</b> <button type="button" class="cp" onclick="cp('${NMS.bkash}',this)">📋 কপি</button><br>Nagad Send Money: <b>${NMS.nagad}</b> <button type="button" class="cp" onclick="cp('${NMS.nagad}',this)">📋 কপি</button><br><small>নাম্বার কপি করে উপরের বিলের টাকা Send Money করুন।</small></div><label>Payment Method</label><select id="pm"><option value="">-- নির্বাচন করুন --</option><option>bKash</option><option>Nagad</option></select><label>TrxID</label><input id="trx"><label>পেমেন্টের স্ক্রিনশট (ঐচ্ছিক)</label><input type="file" id="shot" accept="image/*" onchange="pv(this)"><img loading="lazy" decoding="async" id="shp" class="shp" alt="">`}
@@ -471,10 +475,10 @@ const bt=orderTotal();if(bt.qi>=0&&!bt.ok){$("err").textContent=bt.msg;return}le
 SHOT=(!sp&&$("shot").files[0])||null;if(SHOT&&(!SHOT.type.startsWith("image/")||SHOT.size>8e6)){$("err").textContent="শুধু ছবি (৮MB পর্যন্ত) দিন।";return}
 const oid="NMS-"+new Date().toISOString().slice(2,10).replace(/-/g,"")+"-"+Math.random().toString(36).slice(2,6).toUpperCase();
 const msg=["NMS Tech New Order","Order ID: "+oid,...vals.map(([l,v])=>l+": "+(v||"-")),"Service/Product: "+OD.n,...(OD.c?["Category: "+OD.c]:[]),...(sp?[]:["Payment Method: "+pm,"TrxID: "+trx]),...(SHOT?["Payment Screenshot: "+(NMS.orderUrl?"আপলোড হচ্ছে (Order ID দিয়ে শিটে দেখুন)":"সংযুক্ত (চ্যাটে পাঠানো হবে)")]:[]),"Unit Price: ৳"+OD.p+(k=='smm'?" / 1K":""),"Total Price: ৳"+total].join("\n");
-const o=ORD={id:oid,product:OD.n,category:OD.c||k,total:total,pm:pm,trx:trx,fields:vals,shot:null,hp:($("hp")||{}).value||""};if(SHOT)shotData(SHOT).then(d=>{o.shot=d});
+const o=ORD={id:oid,key:priceKey(OD),product:OD.n,category:OD.c||k,total:total,pm:pm,trx:trx,fields:vals,shot:null,hp:($("hp")||{}).value||""};if(SHOT)shotData(SHOT).then(d=>{o.shot=d});
 const link="https://wa.me/"+WA+"?text="+encodeURIComponent(msg);o.link=link;
 $("box").innerHTML=`<h3>Order Summary</h3><div class="sum">${msg.split("\n").map(esc).join("<br>")}</div>${SHOT?`<img loading="lazy" decoding="async" class="shp on" alt="" src="${URL.createObjectURL(SHOT)}"><button class="btn s" style="width:100%;margin-bottom:10px" onclick="shareShot()">📎 স্ক্রিনশট WhatsApp-এ পাঠান</button><p style="color:var(--mu);font-size:13px;margin:0 0 10px">${NMS.orderUrl?"Confirm করলে স্ক্রিনশট আমাদের কাছে নিজে জমা হবে। চাইলে চ্যাটেও পাঠাতে পারেন।":"অর্ডার মেসেজ পাঠানোর পর স্ক্রিনশটটিও চ্যাটে পাঠান।"}</p>`:""}<div class="row"><button class="btn s" onclick="closeM()">Cancel</button>${sp?`<a class="btn" target="_blank" rel="noopener" href="${link}" onclick="sendOrder();setTimeout(closeM,300)">📲 Direct Deal on WhatsApp</a>`:`<button class="btn" id="cbtn" onclick="confirmOrder()">Confirm &amp; Submit</button>`}</div>${sp?"":`<p style="color:var(--mu);font-size:13px;margin:10px 0 0">Confirm করলে অর্ডার আমাদের কাছে জমা হবে। এরপর চাইলে দ্রুত প্রসেসিংয়ের জন্য WhatsApp-এ পাঠাতে পারবেন।</p>`}`}
-render();
+loadPrices();render();
 
 /* ফুটার ও বাটনের লিংক — সব NMS কনফিগ থেকে */
 (function(){
@@ -486,12 +490,3 @@ render();
   document.querySelectorAll("[data-wa]").forEach(function(a){a.href="https://wa.me/"+NMS.wa});
 })();
 thIcon();
-
-/* দাম আপডেট (অ্যাডমিন প্যানেল থেকে বদলালে prices.js এটা ডাকে) — অর্ডার ফর্ম খোলা থাকলে বিরক্ত করে না */
-function reprice(){
-  D.forEach(x=>{x.p=PRICE_DIGITAL[x.n]});
-  SUB.forEach((x,i)=>{x.p=PRICE_SUB[i][3]});
-  Object.keys(SMM).forEach(pl=>SMM[pl].forEach(([c,it])=>it.forEach(x=>{x[2]=PRICE_SMM[pl][x[0]]})));
-  PALL=null;
-  if(!$("modal").classList.contains("on")&&cur!="ai"&&!document.activeElement.matches("input,textarea,select")){QUIET=1;render()}
-}

@@ -204,9 +204,6 @@ const PRICE_TOPUP={
     ["5 Diamond",14],["50 Diamond",64],["70 Diamond",86],["140 Diamond",170],
     ["355 Diamond",390],["720 Diamond",760],["7290 Diamond",7550],
   ],
-  "🎫 Booyah Pass":[
-    ["Booyah Pass",410],
-  ],
   "🇮🇩 Indonesia Membership":[
     ["Weekly Membership",270],["Monthly Membership",800],
   ],
