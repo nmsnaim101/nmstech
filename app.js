@@ -64,14 +64,55 @@ Object.entries(SMM).forEach(([pl,l])=>l.forEach(([c,it])=>it.forEach(x=>{x[2]=P(
 function loadPrices(){try{const c=JSON.parse(localStorage.getItem("nms_prices")||"null");if(c&&c.m&&Date.now()-c.t<6048e5)applyPrices(c.m)}catch(e){}
 if(!NMS.orderUrl)return;
 fetch(NMS.orderUrl+"?action=prices").then(r=>r.json()).then(d=>{if(d&&d.ok&&d.prices){const ch=applyPrices(d.prices);try{localStorage.setItem("nms_prices",JSON.stringify({t:Date.now(),m:d.prices}))}catch(e){}if(ch)render()}}).catch(()=>{})}
-function card(n,d,p,extra,ord,unit){const i=reg_(ord);return `<div class="card">${media(ord)}<h3>${esc(n)}</h3>${d?`<p>${esc(d)}</p>`:""}<div class="price">৳${p}${unit||""}</div>${OFF.has(priceKey(ord))?'<span class="out">🔴 Out of Stock</span><div class="row"><button class="btn" disabled>Order Now</button></div>':`<div class="row">${extra||""}<button class="btn" onclick="openOrder(${i})">Order Now</button></div>`}</div>`}
+function card(n,d,p,extra,ord,unit){const i=reg_(ord);return `<div class="card">${media(ord)}<h3>${esc(n)}</h3>${(k=>(NMS.hot||[]).includes(k)?'<span class="bdg">🔥 Best Seller</span>':/Friday Offer/.test(k)?'<span class="bdg l">⏳ সীমিত সময়</span>':"")(priceKey(ord))}${d?`<p>${esc(d)}</p>`:""}<div class="price">${(op=>op>p?`<s style="opacity:.55;font-size:.8em;margin-right:6px">৳${op}</s>`:"")(Number((NMS.old||{})[priceKey(ord)]))}৳${p}${unit||""}</div>${OFF.has(priceKey(ord))?'<span class="out">🔴 Out of Stock</span><div class="row"><button class="btn" disabled>Order Now</button></div>':`<div class="row">${extra||""}<button class="btn" onclick="openOrder(${i})">Order Now</button></div>`}</div>`}
 let TOP=0;const TABIDS=TABS.map(t=>t[0]),TTL={home:"NMS Tech Bangla — ডিজিটাল প্রোডাক্ট, সাবস্ক্রিপশন, Free Fire টপ-আপ ও SMM সার্ভিস",digital:"Digital Products — NMS Tech Bangla",smm:"SMM Panel — NMS Tech Bangla",sub:"Premium Subscription — NMS Tech Bangla",topup:"Free Fire Top-Up — NMS Tech Bangla",special:"Special Services — NMS Tech Bangla",ai:"AI Agent — NMS Tech Bangla",trust:"Reviews & Payment Proof — NMS Tech Bangla"};
 function go(v,np){cur=v;Q="";TOP=1;if(!np&&location.hash!=="#"+v)history.pushState({t:v},"","#"+v);render()}
 addEventListener("popstate",()=>{if($("modal").classList.contains("on")){closeM(1);return}const t=location.hash.slice(1);if(t&&!TABIDS.includes(t))return;const v=t||"home";if(v!==cur)go(v,1)});
+
+
+/* 💾 আগের তথ্য মনে রাখা (শুধু এই ব্রাউজারে) */
+const meKey=l=>/gmail|email|ইমেইল/i.test(l)?"mail":/uid/i.test(l)?"uid":/name/i.test(l)?"name":"";
+function prefill(f){try{const s=JSON.parse(localStorage.getItem("nms_me")||"{}");f.forEach(([l],j)=>{const e=$("f"+j),k=meKey(l);if(e&&!e.value&&k&&s[k])e.value=s[k]})}catch(x){}}
+function saveMe(vals){try{const s=JSON.parse(localStorage.getItem("nms_me")||"{}");vals.forEach(([l,v])=>{const k=meKey(l);if(k&&v)s[k]=v});localStorage.setItem("nms_me",JSON.stringify(s))}catch(x){}}
+/* 🔥 Friday Offer কাউন্টডাউন */
+let FRIT=null;
+function friTick(){clearInterval(FRIT);const draw=()=>{const e=$("fri");if(!e){clearInterval(FRIT);return}
+const d=new Date(Date.now()+216e5),day=d.getUTCDay(),sec=d.getUTCHours()*3600+d.getUTCMinutes()*60+d.getUTCSeconds();
+const toMid=86400-sec,left=day==5?toMid:((5-day+7)%7||7)*86400-sec,dd=Math.floor(left/86400),hh=Math.floor(left%86400/3600),mm=Math.floor(left%3600/60),ss=left%60,p=n=>String(n).padStart(2,"0");
+e.innerHTML=(day==5?"🔥 <b>Friday Offer চলছে!</b> শেষ হতে বাকি ":"⏰ পরবর্তী <b>Friday Offer</b> শুরু হতে বাকি ")+`<b>${dd?dd+" দিন ":""}${p(hh)}:${p(mm)}:${p(ss)}</b>`+(day==5?` <a href="#topup" onclick="go('topup');return false">অফার দেখুন →</a>`:"")};
+draw();FRIT=setInterval(draw,1000)}
+/* 💬 ভাসমান WhatsApp বাটন */
+(function(){if(document.getElementById("wafab"))return;const a=document.createElement("a");a.id="wafab";a.href="https://wa.me/"+NMS.wa+"?text="+encodeURIComponent("হ্যালো, আমি NMS Tech Bangla থেকে জানতে চাই");a.target="_blank";a.rel="noopener";a.setAttribute("aria-label","WhatsApp সাপোর্ট");a.textContent="💬";document.body.appendChild(a)})();
+
+/* 🔁 আবার অর্ডার */
+function reoDraw(){const e=$("reo");if(!e)return;try{const l=JSON.parse(localStorage.getItem("nms_last")||"null");if(l&&l.key)e.innerHTML=`<button class="btn s" style="width:100%;margin:10px 0" onclick="reorder()">🔁 আবার অর্ডার: ${esc(String(l.n).replace(/\s*\([^()]*\)\s*$/,""))}</button>`}catch(x){}}
+function reorder(){let l=null;try{l=JSON.parse(localStorage.getItem("nms_last")||"null")}catch(x){}if(!l)return;const t=String(l.key).split("|")[0];go(TABIDS.includes(t)?t:"home");setTimeout(()=>{const i=reg.findIndex(x=>priceKey(x)==l.key);if(i>=0)openOrder(i)},450)}
+/* 🎁 কম্বো অফার (config.js-এর combos থেকে) */
+function combosHtml(){const L=NMS.combos||[];if(!L.length)return"";
+return `<h2>🎁 কম্বো অফার</h2><div class="grid">`+L.map(c=>{const msg=`কম্বো অর্ডার: ${c.title} (${c.items.join(" + ")}) — ৳${c.price}`;
+return `<div class="card"><h3>${esc(c.title)}</h3><p>${c.items.map(esc).join(" + ")}</p><div class="price">${c.was>c.price?`<s style="opacity:.55;font-size:.8em;margin-right:6px">৳${c.was}</s>`:""}৳${c.price}</div><div class="row"><a class="btn" target="_blank" rel="noopener" href="https://wa.me/${NMS.wa}?text=${encodeURIComponent(msg)}">💬 WhatsApp-এ অর্ডার</a></div></div>`}).join("")+`</div>`}
+/* 💬 ফর্ম ছেড়ে যাওয়ার আগে সাহায্য চাওয়া */
+function waHelp(){let m="অর্ডার করতে সমস্যা হচ্ছে।";try{if(OD){m+="\nপণ্য: "+OD.n;const f=FIELDS[OD.k]||FIELDS.mem;f.forEach(([l],j)=>{const e=$("f"+j),v=e&&e.value.trim();if(v&&!/gmail|email|ইমেইল/i.test(l))m+="\n"+l.split(" (")[0]+": "+v})}}catch(x){}open("https://wa.me/"+NMS.wa+"?text="+encodeURIComponent(m),"_blank")}
+/* ইমোজি → সব ডিভাইসে একই SVG আইকন (Twemoji; লোড না হলে সাধারণ ইমোজিই থাকে) */
+(function(){if(document.documentElement.classList.contains("lite"))return;const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@twemoji/api@15.0.3/dist/twemoji.min.js";s.async=true;
+s.onload=()=>{let t=null;const run=()=>{try{twemoji.parse(document.body,{folder:"svg",ext:".svg",className:"emoji"})}catch(e){}};run();new MutationObserver(()=>{clearTimeout(t);t=setTimeout(run,120)}).observe(document.body,{childList:true,subtree:true})};document.head.appendChild(s)})();
+/* 🔴 লাইভ অর্ডার তালিকা — শিট থেকে প্রতি মিনিটে নিজে হালনাগাদ (শুধু নাম, পণ্য, টাকা, স্ট্যাটাস) */
+let LIVET=null;
+const LVST={done:["✅","Done","ok"],processing:["⏳","Processing","pr"],new:["🕒","Received","pr"],canceled:["❌","Canceled","no"]};
+function lvAgo(t){const d=new Date(String(t).replace(" ","T")+":00+06:00"),m=Math.round((Date.now()-d)/6e4);if(!(m>=0))return"";if(m<1)return"এইমাত্র";if(m<60)return m+" মিনিট আগে";const h=Math.floor(m/60);return h<24?h+" ঘণ্টা আগে":Math.floor(h/24)+" দিন আগে"}
+function lvDraw(list){const e=$("live");if(!e)return;
+if(!list||!list.length){e.innerHTML='<div class="lv-e">এখনও কোনো অর্ডার নেই</div>';return}
+e.innerHTML=list.map(o=>{const s=LVST[o.st]||LVST.processing,n=String(o.name||"C").trim()||"Customer";
+return `<div class="lv"><div class="lv-a">${esc(n.charAt(0).toUpperCase())}</div><div class="lv-m"><b>${esc(n)}</b><small>${esc(o.product)} · ৳${esc(o.total)}${lvAgo(o.time)?" · "+lvAgo(o.time):""}</small></div><span class="lv-s ${s[2]}">${s[0]} ${s[1]}</span></div>`}).join("")}
+async function liveLoad(){clearInterval(LIVET);if(!NMS.orderUrl||cur!="home")return;
+try{const c=JSON.parse(sessionStorage.getItem("nms_live")||"null");if(c&&Date.now()-c.t<6e4)lvDraw(c.o)}catch(x){}
+const pull=async()=>{if(cur!="home"){clearInterval(LIVET);return}if(document.hidden)return;
+try{const d=await(await fetch(NMS.orderUrl+"?action=recent")).json();if(d&&d.ok){lvDraw(d.orders);try{sessionStorage.setItem("nms_live",JSON.stringify({t:Date.now(),o:d.orders}))}catch(x){}}}catch(x){const e=$("live");if(e&&e.querySelector(".lv-e"))e.innerHTML='<div class="lv-e">এখন লোড করা যাচ্ছে না</div>'}};
+await pull();LIVET=setInterval(pull,6e4)}
 function render(){if(!QUIET&&document.startViewTransition&&!matchMedia("(prefers-reduced-motion:reduce)").matches)document.startViewTransition(()=>_render());else _render()}
 function _render(){document.title=TTL[cur]||document.title;if(TOP){scrollTo(0,0);TOP=0}reg.length=0;$("nav").innerHTML=TABS.map(([k,l])=>`<a class="${k==cur?'on':''}" href="#${k}" onclick="go('${k}');return false">${l}</a>`).join("");{const n=$("nav"),a=n.querySelector(".on");if(a)n.scrollLeft=a.offsetLeft-(n.clientWidth-a.offsetWidth)/2}
 const v={home,digital,smm,sub,topup,special,ai,trust}[cur];const A=$("app");A.innerHTML=v();A.classList.toggle("q",QUIET);if(!QUIET){A.classList.remove("pg");void A.offsetWidth;A.classList.add("pg")}QUIET=0;A.querySelectorAll(".grid .card").forEach((c,i)=>c.style.setProperty("--i",i%12));
-if(cur=="ai")$("aq").focus();post()}
+if(cur=="ai")$("aq").focus();post();if(cur=="home"){liveLoad();friTick();reoDraw()}}
 function srch(ph){return `<input id="q" placeholder="${ph}" value="${esc(Q)}" oninput="QUIET=1;Q=this.value;const p=this.selectionStart;render();const e=$('q');e.focus();e.setSelectionRange(p,p)">`}
 const m=s=>!Q||s.toLowerCase().includes(Q.toLowerCase());
 const catTiles=()=>{
@@ -98,12 +139,12 @@ const lg=(document.querySelector(".lg")||{}).src||"";
 return `<h2>🌐 NMS Tech — সব সার্ভিস এক জায়গায়</h2><p style="color:var(--mu);margin:-4px 0 0">যেকোনো প্যাকেজে ক্লিক করুন</p><div class="orbx" aria-label="NMS Tech packages"><div class="disc"></div><div class="dash"></div>${lg?`<img loading="lazy" decoding="async" class="ctr" alt="" src="${lg}">`:""}${fl}<div class="rg">${nodes}</div></div>`};
 function home(){return `<div class="hero"><img class="hl" alt="NMS Tech Bangla" src="img/img-1e79f3ae.jpg"><h1>ডিজিটাল প্রোডাক্ট, সাবস্ক্রিপশন, টপ-আপ ও সার্ভিস — সবকিছু একসাথে!</h1><p style="color:var(--mu)">Digital Products, Subscription, SMM, Free Fire Top-Up ও Special Services — সব এক জায়গায়।</p>
 <a class="btn big" href="#" role="button" onclick="openPick();return false">🛒 Order Now</a><div class="hb2"><a class="btn s" href="#" role="button" onclick="go('digital');return false">📦 Packages</a><a class="btn s" href="#" role="button" onclick="go('ai');return false">🤖 Ask AI</a></div>
-${catTiles()}
+<div id="reo"></div>${catTiles()}
 <div class="badges"><span>⚡ Fast Service</span><span>🔐 Secure Process</span><span>⭐ Customer Support</span><span>📦 Multiple Digital Services</span></div></div>
 ${orbit()}
-<h2>🏆 Mega Master Bundle</h2><div class="grid">${card(D[0].n,D[0].d,D[0].p,`<a class="btn s" target="_blank" rel="noopener" href="${D[0].demo}">Demo</a>`,D[0])}</div>
+<div id="fri" class="fri"></div><h2>🏆 Mega Master Bundle</h2><div class="grid">${card(D[0].n,D[0].d,D[0].p,`<a class="btn s" target="_blank" rel="noopener" href="${D[0].demo}">Demo</a>`,D[0])}</div>
 
-<h2>Customer Reviews & Payment Proof</h2>${trustGrid()}<h2>Custom Request</h2><div class="card"><h3>আপনার প্রয়োজনীয় Subscription খুঁজে পাচ্ছেন না?</h3><div class="row"><a class="btn" target="_blank" rel="noopener" href="https://t.me/${NMS.tg}">📲 Telegram — @${NMS.tg}</a><a class="btn s" target="_blank" rel="noopener" href="https://wa.me/${WA}">WhatsApp Support</a></div></div>`}
+${combosHtml()}${NMS.orderUrl?`<h2>🔴 Recent Orders <small style="font-size:12px;color:var(--ok);font-weight:600">● Live</small></h2><div id="live" class="live"><div class="lv-e">লোড হচ্ছে...</div></div>`:""}<h2>Customer Reviews & Payment Proof</h2>${trustGrid()}<h2>Custom Request</h2><div class="card"><h3>আপনার প্রয়োজনীয় Subscription খুঁজে পাচ্ছেন না?</h3><div class="row"><a class="btn" target="_blank" rel="noopener" href="https://t.me/${NMS.tg}">📲 Telegram — @${NMS.tg}</a><a class="btn s" target="_blank" rel="noopener" href="https://wa.me/${WA}">WhatsApp Support</a></div></div>`}
 function digital(){return `<h1 class="pt">A — Mega Bundle / Digital Products</h1>${srch("🔍 Search products...")}<div class="grid">${D.filter(x=>m(x.n+x.d)).map(x=>card(x.n,x.d,x.p,`<a class="btn s" target="_blank" rel="noopener" href="${x.demo}">Demo</a>`,x)).join("")||"<p>আপনার search-এর সাথে মিলছে এমন কোনো product পাওয়া যায়নি।</p>"}</div>`}
 function smm(){const P=Object.keys(SMM);let h=`<h1 class="pt">B — SMM Panel</h1><p style="color:var(--mu)">Platform → Service Category → Package → Order (দাম প্রতি 1K)</p><div class="tabs">${P.map(p=>`<span role="button" tabindex="0" class="tab ${p==ST.smm?'on':''}" onclick="ST.smm='${p}';render()">${PL[p]?`<img loading="lazy" decoding="async" class="ti" alt="${p}" src="${PL[p]}">`:'✈️ '}${p}</span>`).join("")}</div>${srch("🔍 Search package/ID...")}`;
 SMM[ST.smm].forEach(([c,l])=>{const it=l.filter(x=>m(x[0]+x[1]));if(it.length)h+=`<h4>${c}</h4><div class="grid">${it.map(x=>card(x[1],"Package ID: "+x[0],x[2],"",{n:ST.smm+" "+c+" — "+x[0]+" "+x[1],p:x[2],k:'smm',c:ST.smm},"/1K")).join("")}</div>`});return h}
@@ -402,13 +443,13 @@ if(d)await fetch(NMS.orderUrl,{method:"POST",mode:"no-cors",headers:H,body:JSON.
 async function confirmOrder(){const b=$("cbtn");if(!b||b.disabled||!ORD)return;b.disabled=true;b.textContent="পাঠানো হচ্ছে...";
 const{shot,link,msg,sent,...o}=ORD,H={"Content-Type":"text/plain;charset=utf-8"};let ok=false,err="";
 try{const ac=new AbortController(),t=setTimeout(()=>ac.abort(),20000);const r=await fetch(NMS.orderUrl,{method:"POST",headers:H,body:JSON.stringify(o),signal:ac.signal});clearTimeout(t);const d=await r.json();ok=!!(d&&d.ok);err=(d&&d.err)||""}catch(e){ok=false}
-if(!ok){if(err=="price"||err=="unavail"){orderStale(err);return}orderFail();return}
-ORD.sent=1;try{localStorage.setItem("nms_orders",JSON.stringify([ORD.id,...myIds()].slice(0,5)))}catch(e){}
+if(!ok){if(err=="price"||err=="unavail"||err=="coupon"||err=="captcha"){orderStale(err);return}orderFail();return}
+ORD.sent=1;try{localStorage.setItem("nms_last",JSON.stringify({n:OD.n,key:priceKey(OD)}))}catch(e){}try{localStorage.setItem("nms_orders",JSON.stringify([ORD.id,...myIds()].slice(0,5)))}catch(e){}
 orderDone();
 if(SHOT){const d=ORD.shot||await new Promise(r=>setTimeout(()=>r(ORD.shot),1500)),set=t=>{const e=$("shs");if(e)e.textContent=t},bad="⚠ স্ক্রিনশট জমা হয়নি — চাইলে WhatsApp-এ পাঠিয়ে দিন";
 if(!d)set(bad);else fetch(NMS.orderUrl,{method:"POST",headers:H,body:JSON.stringify({shotFor:ORD.id,shot:d})}).then(r=>r.json()).then(x=>set(x&&x.ok?"✅ স্ক্রিনশট জমা হয়েছে":bad)).catch(()=>set(bad))}}
 function orderDone(){$("box").innerHTML=`<h3>✅ অর্ডার জমা হয়েছে</h3><div class="sum"><div style="font-size:13px;color:var(--mu)">আপনার Order ID</div><b style="font-size:22px">${ORD.id}</b> <button type="button" class="cp" onclick="cp('${ORD.id}',this)">📋 কপি</button><br><small>এই আইডি দিয়ে সাইটের "অর্ডার স্ট্যাটাস" থেকে অর্ডারের অবস্থা দেখতে পারবেন।</small></div>${SHOT?'<p id="shs" style="font-size:13px;margin:0 0 10px">⏳ স্ক্রিনশট জমা হচ্ছে...</p>':""}<p style="color:var(--mu);font-size:14px;margin:0 0 10px">আমরা পেমেন্ট যাচাই করে অর্ডার প্রসেস করব। দ্রুত প্রসেসিংয়ের জন্য চাইলে অর্ডারটি WhatsApp-এ পাঠাতে পারেন।</p><a class="btn" style="display:block;text-align:center;margin-bottom:10px" target="_blank" rel="noopener" href="${ORD.link}">⚡ দ্রুত প্রসেসিংয়ের জন্য WhatsApp-এ পাঠান</a><div class="row"><button class="btn s" onclick="closeM()">Close</button><button class="btn s" onclick="openTrack('${ORD.id}')">📦 স্ট্যাটাস দেখুন</button></div>`}
-function orderStale(e){const u=e=="unavail";$("box").innerHTML=`<h3>${u?"🔴 পণ্যটি এখন বন্ধ আছে":"⚠ দাম হালনাগাদ হয়েছে"}</h3><div class="sum">${u?"দুঃখিত, এই পণ্যটি সাময়িকভাবে বন্ধ আছে। অন্য পণ্য বেছে নিন।":"এই পণ্যের দাম বদলে গেছে। পাতা রিফ্রেশ করে নতুন দামে আবার অর্ডার করুন।"}</div><button class="btn" style="width:100%" onclick="${u?"closeM()":"try{localStorage.removeItem('nms_prices')}catch(x){}location.reload()"}">${u?"ঠিক আছে":"🔄 রিফ্রেশ করুন"}</button>`}
+function orderStale(e){if(e=="coupon"||e=="captcha"){const cc=e=="coupon";$("box").innerHTML=`<h3>${cc?"🏷 কোডটি প্রযোজ্য নয়":"🛡 যাচাই সম্পন্ন হয়নি"}</h3><div class="sum">${cc?"কোডের মেয়াদ শেষ বা ব্যবহারসীমা পূর্ণ হয়েছে। কোড ছাড়া বা অন্য কোড দিয়ে আবার অর্ডার করুন।":"নিরাপত্তা যাচাই ব্যর্থ হয়েছে। পাতা রিফ্রেশ করে আবার চেষ্টা করুন।"}</div><button class="btn" style="width:100%" onclick="location.reload()">🔄 রিফ্রেশ করুন</button>`;return}const u=e=="unavail";$("box").innerHTML=`<h3>${u?"🔴 পণ্যটি এখন বন্ধ আছে":"⚠ দাম হালনাগাদ হয়েছে"}</h3><div class="sum">${u?"দুঃখিত, এই পণ্যটি সাময়িকভাবে বন্ধ আছে। অন্য পণ্য বেছে নিন।":"এই পণ্যের দাম বদলে গেছে। পাতা রিফ্রেশ করে নতুন দামে আবার অর্ডার করুন।"}</div><button class="btn" style="width:100%" onclick="${u?"closeM()":"try{localStorage.removeItem('nms_prices')}catch(x){}location.reload()"}">${u?"ঠিক আছে":"🔄 রিফ্রেশ করুন"}</button>`}
 function orderFail(){$("box").innerHTML=`<h3>⚠ অর্ডার জমা করা যায়নি</h3><div class="sum">ইন্টারনেট বা সার্ভারে সমস্যা হয়েছে। আপনার Order ID: <b>${ORD.id}</b></div><p style="color:var(--mu);font-size:14px;margin:0 0 10px">আবার চেষ্টা করুন, অথবা অর্ডারটি সরাসরি WhatsApp-এ পাঠিয়ে দিন।</p><button class="btn" id="cbtn" style="width:100%;margin-bottom:10px" onclick="confirmOrder()">🔄 আবার চেষ্টা করুন</button><a class="btn s" style="display:block;text-align:center" target="_blank" rel="noopener" href="${ORD.link}">📲 WhatsApp-এ পাঠান</a><div class="row" style="margin-top:10px"><button class="btn s" onclick="closeM()">Close</button></div>`}
 function openTrack(pre){const ids=myIds();
 $("box").innerHTML=`<h3>📦 অর্ডার স্ট্যাটাস</h3><label>আপনার Order ID</label><input id="tid" placeholder="NMS-261020-A1B2" value="${esc(pre||"")}">${ids.length?`<div class="row" style="margin:8px 0">${ids.map(i=>`<button class="btn s" style="padding:6px 10px" onclick="$('tid').value='${i}';trackOrder()">${i}</button>`).join("")}</div>`:""}<div id="tres" class="sum" style="display:none"></div><div class="row"><button class="btn s" onclick="closeM()">Close</button><button class="btn" onclick="trackOrder()">স্ট্যাটাস দেখুন</button></div>`;
@@ -437,9 +478,23 @@ function openOrder(i){OD=reg[i]||null;SHOT=null;if(!OD)return;if(OFF.has(priceKe
 $("box").innerHTML=`${PICK?'<a class="bk" href="#" role="button" onclick="openPick(1);return false">← অন্য পণ্য বাছুন</a>':""}<h3>${esc(OD.n)}</h3><div class="price">৳${OD.p}${k=='smm'?' / 1K':''}</div>
 <form onsubmit="return false" id="of">${f.map(([l,ty,opt],j)=>ty=="area"?`<label>${l}</label><textarea id="f${j}" rows="3"></textarea>`:`<label>${l}</label><input id="f${j}" type="${ty||'text'}" ${opt?'':'data-req="1"'} ${/^Quantity/.test(l)?`inputmode="numeric" min="1" oninput="bill()" ${k=='smm'?'placeholder="যেমন 1000"':'value="1"'}`:''}>`).join("")}
 ${sp?"":`<div class="sum bill" id="bill"></div><div class="sum">bKash Send Money: <b>${NMS.bkash}</b> <button type="button" class="cp" onclick="cp('${NMS.bkash}',this)">📋 কপি</button><br>Nagad Send Money: <b>${NMS.nagad}</b> <button type="button" class="cp" onclick="cp('${NMS.nagad}',this)">📋 কপি</button><br><small>নাম্বার কপি করে উপরের বিলের টাকা Send Money করুন।</small></div><label>Payment Method</label><select id="pm"><option value="">-- নির্বাচন করুন --</option><option>bKash</option><option>Nagad</option></select><label>TrxID</label><input id="trx"><label>পেমেন্টের স্ক্রিনশট (ঐচ্ছিক)</label><input type="file" id="shot" accept="image/*" onchange="pv(this)"><img loading="lazy" decoding="async" id="shp" class="shp" alt="">`}
-<input id="hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"></form><p class="out" id="err"></p><div class="row"><button class="btn s" onclick="closeM()">Cancel</button><button class="btn" onclick="summary()">Order Summary</button></div>`;mOpen();bill()}
+${sp?"":`<label>ডিসকাউন্ট / রেফারেল কোড (ঐচ্ছিক)</label><div class="row" style="gap:6px"><input id="cpn" autocapitalize="characters" autocomplete="off" placeholder="যেমন WELCOME5" style="flex:1"><button type="button" class="btn s" onclick="applyCoupon()">প্রয়োগ</button></div><small id="cpm" style="display:block;min-height:1.2em"></small>${NMS.turnstile?'<div id="cft" style="margin:8px 0"></div>':""}`}<input id="hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"></form><p class="out" id="err"></p><p style="margin:4px 0 10px;font-size:13px"><a href="#" onclick="waHelp();return false">💬 অর্ডার করতে সমস্যা? WhatsApp-এ জানান</a></p><div class="row"><button class="btn s" onclick="closeM()">Cancel</button><button class="btn" onclick="summary()">Order Summary</button></div>`;mOpen();CPN=null;bill();prefill(f);if(!sp&&NMS.turnstile)tsRender()}
+async function applyCoupon(){const el=$("cpn"),m=$("cpm");if(!el||!m)return;const c=el.value.trim().toUpperCase();
+if(!c){CPN=null;m.textContent="";bill();return}
+if(!NMS.orderUrl){m.textContent="কোড এখন চালু নেই।";return}
+m.textContent="যাচাই হচ্ছে...";
+try{const d=await(await fetch(NMS.orderUrl+"?action=coupon&code="+encodeURIComponent(c))).json();
+if(d&&d.valid){CPN={code:c,type:d.type,value:d.value,for:OD.n};m.style.color="var(--ok,#0f9d58)";m.textContent="✅ কোড প্রযোজ্য"+(d.label?" — "+d.label:"")}
+else{CPN=null;m.style.color="";m.textContent={expired:"কোডের মেয়াদ শেষ।",used:"কোডটি আর ব্যবহার করা যাবে না।",off:"কোডটি এখন বন্ধ।"}[d&&d.err]||"কোডটি সঠিক নয়।"}}
+catch(e){CPN=null;m.textContent="যাচাই করা যায়নি, আবার চেষ্টা করুন."}bill()}
+function tsRender(){const go=()=>{const e=$("cft");if(!e||!window.turnstile)return;try{turnstile.render(e,{sitekey:NMS.turnstile,theme:"auto"})}catch(x){}};
+if(window.turnstile){go();return}
+if(!document.getElementById("tsjs")){const s=document.createElement("script");s.id="tsjs";s.src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";s.async=true;s.onload=go;document.head.appendChild(s)}else setTimeout(go,800)}
 const fmtT=n=>String(Math.round(n*100)/100);
-function orderTotal(){const k=OD.k,f=FIELDS[k]||FIELDS.mem,qi=f.findIndex(x=>/^Quantity/.test(x[0]));
+let CPN=null;
+function orderTotal(){const t=orderTotal0();if(CPN&&CPN.for!==OD.n)CPN=null;t.disc=0;
+if(CPN&&t.ok){t.disc=Math.round((CPN.type=="fixed"?Math.min(CPN.value,t.total):t.total*Math.min(CPN.value,90)/100)*100)/100;t.total=Math.round((t.total-t.disc)*100)/100}return t}
+function orderTotal0(){const k=OD.k,f=FIELDS[k]||FIELDS.mem,qi=f.findIndex(x=>/^Quantity/.test(x[0]));
 if(qi<0)return{qi,q:1,total:OD.p,ok:true};
 const q=parseFloat($("f"+qi).value);
 if(k=='smm'){if(!(q>0)||q>1e7)return{qi,q:0,total:0,ok:false,msg:"সঠিক Quantity দিন (যেমন 1000)।"};return{qi,q,total:Math.round(OD.p*q/1000*100)/100,ok:true}}
@@ -448,7 +503,7 @@ return{qi,q,total:Math.round(OD.p*q*100)/100,ok:true}}
 function bill(){const b=$("bill");if(!b||!OD)return;const t=orderTotal();
 if(!t.ok){b.innerHTML="💰 <b>আপনার বিল:</b> Quantity দিলে এখানে দেখাবে";return}
 const how=t.qi<0?"":OD.k=='smm'?`<br><small>৳${OD.p} / 1K × ${t.q} ÷ 1000</small>`:`<br><small>৳${OD.p} × ${t.q}টি</small>`;
-b.innerHTML=`💰 <b>আপনার বিল:</b> <b class="tt">৳${fmtT(t.total)}</b> <button type="button" class="cp" onclick="cp('${fmtT(t.total)}',this)">📋 টাকা কপি</button>${how}`}
+b.innerHTML=`💰 <b>আপনার বিল:</b> ${t.disc?`<s style="opacity:.55">৳${fmtT(t.total+t.disc)}</s> `:""}<b class="tt">৳${fmtT(t.total)}</b> <button type="button" class="cp" onclick="cp('${fmtT(t.total)}',this)">📋 টাকা কপি</button>${how}${t.disc?`<br><small>🏷 কোড ${esc(CPN.code)}: −৳${fmtT(t.disc)}</small>`:""}`}
 function cp(t,b){const o=b.textContent,ok=()=>{b.textContent="✅ কপি হয়েছে";setTimeout(()=>{b.textContent=o},1500)};
 function fb(){const a=document.createElement("textarea");a.value=t;a.style.cssText="position:fixed;opacity:0";document.body.appendChild(a);a.select();try{document.execCommand("copy");ok()}catch(e){}a.remove()}
 if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(ok,fb);else fb()}
@@ -472,10 +527,10 @@ let pm="",trx="";if(!sp){pm=$("pm").value;trx=$("trx").value.trim();if(!pm||!trx
 if(bad){$("err").textContent=sp?"সব তথ্য পূরণ করুন।":"সব তথ্য, Payment Method ও TrxID দিন।";return}
 const ve=fieldErr(f,vals,sp?"":trx);if(ve){$("err").textContent=ve;return}
 const bt=orderTotal();if(bt.qi>=0&&!bt.ok){$("err").textContent=bt.msg;return}let total=bt.total;
-SHOT=(!sp&&$("shot").files[0])||null;if(SHOT&&(!SHOT.type.startsWith("image/")||SHOT.size>8e6)){$("err").textContent="শুধু ছবি (৮MB পর্যন্ত) দিন।";return}
+saveMe(vals);SHOT=(!sp&&$("shot").files[0])||null;if(SHOT&&(!SHOT.type.startsWith("image/")||SHOT.size>8e6)){$("err").textContent="শুধু ছবি (৮MB পর্যন্ত) দিন।";return}
 const oid="NMS-"+new Date().toISOString().slice(2,10).replace(/-/g,"")+"-"+Math.random().toString(36).slice(2,6).toUpperCase();
-const msg=["NMS Tech New Order","Order ID: "+oid,...vals.map(([l,v])=>l+": "+(v||"-")),"Service/Product: "+OD.n,...(OD.c?["Category: "+OD.c]:[]),...(sp?[]:["Payment Method: "+pm,"TrxID: "+trx]),...(SHOT?["Payment Screenshot: "+(NMS.orderUrl?"আপলোড হচ্ছে (Order ID দিয়ে শিটে দেখুন)":"সংযুক্ত (চ্যাটে পাঠানো হবে)")]:[]),"Unit Price: ৳"+OD.p+(k=='smm'?" / 1K":""),"Total Price: ৳"+total].join("\n");
-const o=ORD={id:oid,key:priceKey(OD),product:OD.n,category:OD.c||k,total:total,pm:pm,trx:trx,fields:vals,shot:null,hp:($("hp")||{}).value||""};if(SHOT)shotData(SHOT).then(d=>{o.shot=d});
+const msg=["NMS Tech New Order","Order ID: "+oid,...vals.map(([l,v])=>l+": "+(v||"-")),"Service/Product: "+OD.n,...(OD.c?["Category: "+OD.c]:[]),...(CPN&&!sp?["Discount Code: "+CPN.code+" (−৳"+bt.disc+")"]:[]),...(sp?[]:["Payment Method: "+pm,"TrxID: "+trx]),...(SHOT?["Payment Screenshot: "+(NMS.orderUrl?"আপলোড হচ্ছে (Order ID দিয়ে শিটে দেখুন)":"সংযুক্ত (চ্যাটে পাঠানো হবে)")]:[]),"Unit Price: ৳"+OD.p+(k=='smm'?" / 1K":""),"Total Price: ৳"+total].join("\n");
+const o=ORD={id:oid,key:priceKey(OD),product:OD.n,category:OD.c||k,total:total,pm:pm,trx:trx,fields:vals,shot:null,hp:($("hp")||{}).value||"",code:CPN?CPN.code:"",cf:(document.querySelector("[name=cf-turnstile-response]")||{}).value||""};if(SHOT)shotData(SHOT).then(d=>{o.shot=d});
 const link="https://wa.me/"+WA+"?text="+encodeURIComponent(msg);o.link=link;
 $("box").innerHTML=`<h3>Order Summary</h3><div class="sum">${msg.split("\n").map(esc).join("<br>")}</div>${SHOT?`<img loading="lazy" decoding="async" class="shp on" alt="" src="${URL.createObjectURL(SHOT)}"><button class="btn s" style="width:100%;margin-bottom:10px" onclick="shareShot()">📎 স্ক্রিনশট WhatsApp-এ পাঠান</button><p style="color:var(--mu);font-size:13px;margin:0 0 10px">${NMS.orderUrl?"Confirm করলে স্ক্রিনশট আমাদের কাছে নিজে জমা হবে। চাইলে চ্যাটেও পাঠাতে পারেন।":"অর্ডার মেসেজ পাঠানোর পর স্ক্রিনশটটিও চ্যাটে পাঠান।"}</p>`:""}<div class="row"><button class="btn s" onclick="closeM()">Cancel</button>${sp?`<a class="btn" target="_blank" rel="noopener" href="${link}" onclick="sendOrder();setTimeout(closeM,300)">📲 Direct Deal on WhatsApp</a>`:`<button class="btn" id="cbtn" onclick="confirmOrder()">Confirm &amp; Submit</button>`}</div>${sp?"":`<p style="color:var(--mu);font-size:13px;margin:10px 0 0">Confirm করলে অর্ডার আমাদের কাছে জমা হবে। এরপর চাইলে দ্রুত প্রসেসিংয়ের জন্য WhatsApp-এ পাঠাতে পারবেন।</p>`}`}
 loadPrices();render();

@@ -62,6 +62,24 @@ a{color:var(--bl)}
 #psave .wrap{display:flex;gap:8px;max-width:760px;margin:0 auto;padding:0}
 .empty{text-align:center;color:var(--mu);padding:40px 0}
 .st-new{color:var(--wa)}.st-chk{color:var(--bl)}.st-pro{color:var(--pu)}.st-ok{color:var(--ok)}.st-no{color:var(--rd)}.st-ot{color:var(--mu)}
+
+.seg{gap:8px;margin:0 0 8px}.seg button{padding:13px 8px;font-size:16px;border-radius:12px;min-height:48px}
+.chip{padding:9px 15px;font-size:14px;min-height:40px}
+.grp{background:var(--card);border:1px solid var(--bd);border-radius:14px;margin:8px 0;overflow:hidden}
+.grp>summary{list-style:none;cursor:pointer;padding:13px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:700;min-height:48px}
+.grp>summary::-webkit-details-marker{display:none}
+.grp>summary small{color:var(--mu);font-weight:500;font-size:12px}
+.grp>summary:after{content:"▾";color:var(--mu);transition:transform .15s}.grp[open]>summary:after{transform:rotate(180deg)}
+.grp .gn{min-width:0;flex:1}.grp .gc{color:var(--ac);font-size:12px;font-weight:700}
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 8px 10px}
+.pg .prow{flex-direction:column;align-items:stretch;margin:0;padding:10px}
+.pg .pc{flex-direction:row;justify-content:space-between;align-items:center}
+.pg .pp{width:100%;min-width:0;text-align:left;font-size:16px;padding:8px}
+.pg .pav{white-space:nowrap}
+.pg .pn b{font-size:13px}
+@media(min-width:620px){.pg{grid-template-columns:repeat(3,1fr)}}
+.note{width:100%;min-height:64px;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;margin:0 0 8px;font:inherit}
+.hasn{font-size:12px;color:var(--wa)}
 </style>
 </head>
 <body>
@@ -81,6 +99,7 @@ a{color:var(--bl)}
       <h1>📦 অর্ডার</h1>
       <div class="r">
         <button class="btn s" id="rf">🔄 রিফ্রেশ</button>
+        <button class="btn s" id="csv">⬇ CSV</button>
         <button class="btn s" id="lo">বের হন</button>
       </div>
     </div>
@@ -164,7 +183,7 @@ function render(){
   $("list").innerHTML=rows.map(o=>{
     const open=OPEN==o.id;
     return `<div class="card ${open?"open":""}" data-id="${esc(o.id)}">
-<div class="hd" data-act="toggle"><div class="row1"><span class="oid">${esc(o.id)} · ${esc(o.time)}</span><span class="badge ${cls(o.status)}">${esc(o.status)}</span></div>
+<div class="hd" data-act="toggle"><div class="row1"><span class="oid">${esc(o.id)} · ${esc(o.time)}${getNote(o)?' <span class="hasn">📝</span>':""}</span><span class="badge ${cls(o.status)}">${esc(o.status)}</span></div>
 <div class="pr">${esc(o.product)}</div><div class="meta">৳${esc(o.total)} · ${esc(o.pm)}${o.trx?" · "+esc(o.trx):""}${o.name?" · "+esc(o.name):""}</div></div>
 <div class="body">
 ${o.note?`<div class="warn">${esc(o.note)}</div>`:""}
@@ -173,6 +192,8 @@ ${o.trx?`<div class="kv"><b>TrxID:</b> ${esc(o.trx)} <button class="cp" data-act
 ${o.mail?`<div class="kv"><b>Gmail:</b> ${esc(o.mail)} <button class="cp" data-act="copy" data-v="${esc(o.mail)}">📋</button></div>`:""}
 <pre>${esc(o.details)}</pre>
 ${/^https:\/\/(drive|docs)\.google\.com\//.test(o.shot)?`<div class="kv"><a href="${esc(o.shot)}" target="_blank" rel="noopener">📎 পেমেন্ট স্ক্রিনশট দেখুন</a></div>`:""}
+<div class="kv"><b>📝 নোট (শুধু আপনার জন্য):</b></div>
+<textarea class="note" data-act="note" placeholder="যেমন: কাস্টমারকে ফোন দিয়েছি, UID ভুল ছিল...">${esc(getNote(o))}</textarea>
 <div class="kv"><b>স্ট্যাটাস বদলান:</b></div>
 <div class="sts">${STATUSES.map(s=>`<button class="${o.status==s?"cur":""}" data-act="st" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div>
 </div></div>`}).join("");
@@ -211,6 +232,26 @@ $("list").addEventListener("click",e=>{
 });
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&TOKEN)load(true)});
 
+
+/* ---------- 📝 নোট ও ⬇ CSV ---------- */
+let NOTES={};try{NOTES=JSON.parse(localStorage.getItem("nms_notes")||"{}")}catch(e){}
+const getNote=o=>NOTES[o.id]!==undefined?NOTES[o.id]:(o.adminNote||"");
+let noteT;
+function saveNote(id,v){NOTES[id]=v;try{localStorage.setItem("nms_notes",JSON.stringify(NOTES))}catch(e){}
+clearTimeout(noteT);noteT=setTimeout(()=>{api({action:"setNote",token:TOKEN,id:id,note:v}).catch(()=>{});toast("📝 নোট সেভ হয়েছে")},900)}
+$("list").addEventListener("input",e=>{const t=e.target;if(t.dataset.act!="note")return;saveNote(t.closest(".card").dataset.id,t.value)});
+function csvCell(v){v=String(v==null?"":v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function exportCSV(){
+  const q=Q.trim().toLowerCase();
+  const rows=ORDERS.filter(o=>(FILTER=="all"||o.status==FILTER)&&(!q||[o.id,o.name,o.trx,o.product,o.mail,o.details].join(" ").toLowerCase().includes(q)));
+  if(!rows.length){toast("নামানোর মতো অর্ডার নেই");return}
+  const H=["Order ID","সময়","পণ্য","মোট (৳)","পেমেন্ট","TrxID","নাম","Gmail","স্ট্যাটাস","বিস্তারিত","নোট"];
+  const L=[H.map(csvCell).join(",")].concat(rows.map(o=>[o.id,o.time,o.product,o.total,o.pm,o.trx,o.name,o.mail,o.status,o.details,getNote(o)].map(csvCell).join(",")));
+  const b=new Blob(["\uFEFF"+L.join("\r\n")],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");
+  a.href=URL.createObjectURL(b);a.download="nms-orders-"+new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Dhaka"})+".csv";document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("⬇ "+rows.length+"টি অর্ডার নামানো হয়েছে")}
+$("csv").onclick=exportCSV;
+
 /* ---------- 💰 দাম ম্যানেজমেন্ট ---------- */
 let VIEW="o",PR=[],PFL="all",PQ2="";
 function setView(v){VIEW=v;$("tabO").classList.toggle("on",v=="o");$("tabP").classList.toggle("on",v=="p");
@@ -227,11 +268,21 @@ PR=d.rows.filter(r=>!cat.length||def[r.key]!==undefined).map(r=>({...r,op:r.p,oa
 catch(e){l.innerHTML='<div class="empty">দাম লোড করা যায়নি। রিফ্রেশ করে আবার চেষ্টা করুন।</div>'}}
 const chgd=r=>Number(r.p)!==r.op||r.av!==r.oav;
 function visP(){const q=PQ2.trim().toLowerCase();return PR.filter(r=>(PFL=="all"||r.type==PFL)&&(!q||(r.name+" "+r.group+" "+r.key).toLowerCase().includes(q)))}
+const TL={Digital:"ডিজিটাল প্রোডাক্ট",SMM:"SMM সার্ভিস",Subscription:"সাবস্ক্রিপশন","Top-Up":"টপ-আপ",Service:"সার্ভিস"};
+const tl=t=>TL[t]||t;
+const clean=x=>String(x||"").replace(/^[^\p{L}\p{N}]+/u,"").replace(/\s*\([^()]*\)\s*$/,"").trim();
+const tidyName=r=>{let n=String(r.name||"").replace(/^[^\p{L}\p{N}]+/u,"");
+  n=n.replace(/\s*\((?:[^()]*)\)\s*$/,"").replace(/\s+/g," ").trim();return n.length>70?n.slice(0,68)+"…":n};
+const PGO=new Set();
 function renderP(){const types=[...new Set(PR.map(r=>r.type))];
-$("pchips").innerHTML=`<button class="chip ${PFL=="all"?"on":""}" data-pf="all">সব (${PR.length})</button>`+types.map(t=>`<button class="chip ${PFL==t?"on":""}" data-pf="${esc(t)}">${esc(t)} (${PR.filter(r=>r.type==t).length})</button>`).join("");
-const rows=visP();
-$("plist").innerHTML=rows.slice(0,250).map(r=>`<div class="prow${chgd(r)?" chg":""}${r.av?"":" off"}" data-key="${esc(r.key)}"><div class="pn"><b>${esc(r.name)}</b><small>${esc(r.type)} · ${esc(r.group)}${r.type=="SMM"?" · প্রতি 1K":""}</small></div><div class="pc"><input class="pp" type="number" inputmode="decimal" step="0.01" min="0" value="${esc(r.p)}" data-act="pp"><label class="pav"><input type="checkbox" data-act="pav" ${r.av?"checked":""}> চালু</label></div></div>`).join("")+(rows.length>250?'<div class="empty">আরও '+(rows.length-250)+'টি আছে — সার্চ করে খুঁজুন</div>':"")||'<div class="empty">কিছু পাওয়া যায়নি</div>';
+$("pchips").innerHTML=`<button class="chip ${PFL=="all"?"on":""}" data-pf="all">সব (${PR.length})</button>`+types.map(t=>`<button class="chip ${PFL==t?"on":""}" data-pf="${esc(t)}">${esc(tl(t))} (${PR.filter(r=>r.type==t).length})</button>`).join("");
+const rows=visP(),G={};rows.forEach(r=>{const k=r.type+"||"+r.group;(G[k]=G[k]||[]).push(r)});
+const searching=PQ2.trim()!=="",ks=Object.keys(G);
+$("plist").innerHTML=ks.map(k=>{const g=G[k],c=g.filter(chgd).length,ttl=clean(g[0].group)||g[0].group,open=searching||PGO.has(k)||c>0;
+return `<details class="grp" data-g="${esc(k)}"${open?" open":""}><summary><span class="gn">${esc(ttl)}<br><small>${esc(tl(g[0].type))} · ${g.length}টি${g[0].type=="SMM"?" · প্রতি ১ হাজার":""}</small></span>${c?`<span class="gc">✎ ${c}</span>`:""}</summary><div class="pg">`+
+g.map(r=>`<div class="prow${chgd(r)?" chg":""}${r.av?"":" off"}" data-key="${esc(r.key)}"><div class="pn"><b>${esc(tidyName(r))}</b></div><div class="pc"><span class="meta">৳</span><input class="pp" type="number" inputmode="decimal" step="0.01" min="0" value="${esc(r.p)}" data-act="pp"><label class="pav"><input type="checkbox" data-act="pav" ${r.av?"checked":""}> চালু</label></div></div>`).join("")+`</div></details>`}).join("")||'<div class="empty">কিছু পাওয়া যায়নি</div>';
 updSave()}
+$("plist").addEventListener("toggle",e=>{const d=e.target;if(!d.dataset||!d.dataset.g)return;d.open?PGO.add(d.dataset.g):PGO.delete(d.dataset.g)},true);
 function updSave(){const n=PR.filter(chgd).length,b=$("psb");$("psave").style.display=VIEW=="p"&&n?"block":"none";b.textContent="💾 সেভ করুন ("+n+"টি পরিবর্তন)"}
 async function savePrices(){const ch=PR.filter(chgd);if(!ch.length)return;
 if(ch.some(r=>!isFinite(Number(r.p))||Number(r.p)<0)){toast("⚠ সব দাম সঠিক সংখ্যায় দিন");return}
