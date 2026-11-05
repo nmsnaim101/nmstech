@@ -80,6 +80,12 @@ a{color:var(--bl)}
 @media(min-width:620px){.pg{grid-template-columns:repeat(3,1fr)}}
 .note{width:100%;min-height:64px;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;margin:0 0 8px;font:inherit}
 .hasn{font-size:12px;color:var(--wa)}
+
+.bulk select{flex:1;min-width:0;background:var(--card);color:inherit;border:1px solid var(--bd);border-radius:10px;padding:10px}
+.bulk input[type=date]{flex:1;min-width:0}
+.rs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}.rs div{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;display:flex;flex-direction:column}.rs b{font-size:20px}.rs small{color:var(--mu)}
+.rbar{display:grid;grid-template-columns:78px 1fr auto;gap:8px;align-items:center;margin:6px 0;font-size:13px}.rbar div{background:var(--bd);border-radius:6px;height:12px;overflow:hidden}.rbar i{display:block;height:100%;background:var(--ac)}
+.rtop{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--bd);font-size:14px}
 </style>
 </head>
 <body>
@@ -89,6 +95,7 @@ a{color:var(--bl)}
   <h1>🔐 NMS Admin</h1>
   <p>অর্ডার ম্যানেজ করতে পাসওয়ার্ড দিন।</p>
   <input id="pw" type="password" placeholder="পাসওয়ার্ড" autocomplete="current-password">
+  <input id="otp" inputmode="numeric" maxlength="6" placeholder="Telegram-এর ৬ সংখ্যার কোড" style="display:none">
   <div class="err" id="lerr"></div>
   <button class="btn" id="lbtn" style="width:100%;margin-top:6px">লগিন</button>
 </div>
@@ -103,12 +110,14 @@ a{color:var(--bl)}
         <button class="btn s" id="lo">বের হন</button>
       </div>
     </div>
-    <div class="seg"><button class="on" id="tabO">📦 অর্ডার</button><button id="tabP">💰 দাম</button></div>
+    <div class="seg"><button class="on" id="tabO">📦 অর্ডার</button><button id="tabP">💰 দাম</button><button id="tabR">📊 রিপোর্ট</button></div>
     <div id="oc">
       <div id="warn" class="warnbar" style="display:none"></div>
       <div id="stats" class="stats"></div>
       <input id="q" type="search" placeholder="সার্চ: Order ID, নাম, TrxID, পণ্য, Gmail...">
+      <div class="bulk"><input id="d1" type="date" title="শুরুর তারিখ"><input id="d2" type="date" title="শেষ তারিখ"><button class="btn s" id="dclr">✕ তারিখ</button></div>
       <div class="chips" id="chips"></div>
+      <div class="bulk"><select id="bst"></select><button class="btn s" id="bsb">দেখানো অর্ডারে স্ট্যাটাস বদলান</button></div>
     </div>
     <div id="pc" style="display:none">
       <input id="pq" type="search" placeholder="সার্চ: পণ্যের নাম বা গ্রুপ...">
@@ -117,6 +126,7 @@ a{color:var(--bl)}
     </div>
   </div>
   <div id="list"></div>
+  <div id="rc" style="display:none"></div>
   <div id="plist" style="display:none"></div>
   <div style="height:80px"></div>
   <div id="psave"><div class="wrap"><button class="btn" id="psb" style="flex:1"></button><button class="btn s" id="prs">↩ বাতিল</button></div></div>
@@ -147,8 +157,9 @@ async function login(){
   const pw=$("pw").value;if(!pw)return;
   const b=$("lbtn");b.disabled=true;b.textContent="যাচাই হচ্ছে...";$("lerr").textContent="";
   try{
-    const d=await api({action:"login",password:pw});
+    const d=await api({action:"login",password:pw,otp:$("otp").value.trim()});
     if(d.ok){TOKEN=d.token;try{sessionStorage.setItem("nms_adm",TOKEN)}catch(e){}showApp();await load(false)}
+    else if(d.err=="otp"||d.err=="otpbad"){$("otp").style.display="";$("otp").value="";$("otp").focus();$("lerr").textContent=d.err=="otp"?"✅ Telegram-এ কোড পাঠানো হয়েছে। কোড দিয়ে আবার লগিন চাপুন।":"কোড ভুল বা মেয়াদ শেষ। কোড খালি রেখে লগিন চাপলে নতুন কোড যাবে।"}
     else $("lerr").textContent=d.err=="locked"?"অনেকবার ভুল দেওয়া হয়েছে। ১০ মিনিট পর আবার চেষ্টা করুন।":d.err=="nopass"?"সার্ভারে ADMIN_PASSWORD সেট করা নেই (কমপক্ষে ৮ অক্ষর)।":"পাসওয়ার্ড ভুল।";
   }catch(e){$("lerr").textContent="সার্ভারে যোগাযোগ করা যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন."}
   b.disabled=false;b.textContent="লগিন";
@@ -174,11 +185,12 @@ $("stats").textContent="আজ: "+t.length+"টি অর্ডার · ৳"+li
 function cls(s){return /বাতিল|cancel/i.test(s)?"st-no":/কমপ্লিট|ডেলিভারি|complete|deliver/i.test(s)?"st-ok":/প্রসেসিং/.test(s)?"st-pro":/যাচাই/.test(s)?"st-chk":s=="নতুন"?"st-new":"st-ot"}
 
 function render(){
+  if(!$("bst").options.length)$("bst").innerHTML=STATUSES.map(x=>`<option>${esc(x)}</option>`).join("");
   const all=[...STATUSES];ORDERS.forEach(o=>{if(o.status&&!all.includes(o.status))all.push(o.status)});
   const cnt=s=>ORDERS.filter(o=>o.status==s).length;
   $("chips").innerHTML=`<button class="chip ${FILTER=="all"?"on":""}" data-f="all">সব (${ORDERS.length})</button>`+all.map(s=>`<button class="chip ${FILTER==s?"on":""}" data-f="${esc(s)}">${esc(s)} (${cnt(s)})</button>`).join("");
   const q=Q.trim().toLowerCase();
-  const rows=ORDERS.filter(o=>(FILTER=="all"||o.status==FILTER)&&(!q||[o.id,o.name,o.trx,o.product,o.mail,o.details].join(" ").toLowerCase().includes(q)));
+  const rows=ORDERS.filter(o=>(FILTER=="all"||o.status==FILTER)&&dOK(o)&&(!q||[o.id,o.name,o.trx,o.product,o.mail,o.details].join(" ").toLowerCase().includes(q)));
   if(!rows.length){$("list").innerHTML='<div class="empty">কোনো অর্ডার নেই</div>';return}
   $("list").innerHTML=rows.map(o=>{
     const open=OPEN==o.id;
@@ -233,6 +245,35 @@ $("list").addEventListener("click",e=>{
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&TOKEN)load(true)});
 
 
+
+/* ---------- 📅 তারিখ ফিল্টার, ☑ একসাথে স্ট্যাটাস, 📊 রিপোর্ট ---------- */
+let D1="",D2="",RP="d";
+const dOK=o=>{const d=String(o.time).slice(0,10);return(!D1||d>=D1)&&(!D2||d<=D2)};
+$("d1").onchange=e=>{D1=e.target.value;render()};$("d2").onchange=e=>{D2=e.target.value;render()};
+$("dclr").onclick=()=>{D1=D2="";$("d1").value=$("d2").value="";render()};
+function visO(){const q=Q.trim().toLowerCase();return ORDERS.filter(o=>(FILTER=="all"||o.status==FILTER)&&dOK(o)&&(!q||[o.id,o.name,o.trx,o.product,o.mail,o.details].join(" ").toLowerCase().includes(q)))}
+$("bsb").onclick=async()=>{const st=$("bst").value,rows=visO().filter(o=>o.status!=st).slice(0,60);
+if(!st||!rows.length){toast("বদলানোর মতো অর্ডার নেই");return}
+if(!confirm(rows.length+"টি অর্ডারের স্ট্যাটাস \""+st+"\" করবেন?"+(/কমপ্লিট/.test(st)?"\n(ক্রেতাদের ইমেইলও যাবে)":"")))return;
+let ok=0;for(const o of rows){try{const d=await api({action:"setStatus",token:TOKEN,id:o.id,status:st});if(d.ok){o.status=st;ok++}}catch(e){}}
+render();toast("✅ "+ok+"/"+rows.length+"টি বদলেছে")};
+function drawReport(){
+const live=ORDERS.filter(o=>o.status!=="বাতিল"),dn=ORDERS.filter(o=>/কমপ্লিট/.test(o.status)),sum=a=>a.reduce((x,o)=>x+(Number(o.total)||0),0);
+const key=o=>{const d=String(o.time).slice(0,10);if(RP=="m")return d.slice(0,7);if(RP=="w"){const t=new Date(d+"T00:00:00Z"),w=(t.getUTCDay()+6)%7;t.setUTCDate(t.getUTCDate()-w);return t.toISOString().slice(0,10)}return d};
+const g={};live.forEach(o=>{const k=key(o);g[k]=g[k]||{n:0,t:0};g[k].n++;g[k].t+=Number(o.total)||0});
+const ks=Object.keys(g).sort().slice(-(RP=="d"?14:RP=="w"?8:6)),mx=Math.max(1,...ks.map(k=>g[k].t));
+const top={};live.forEach(o=>{const n=String(o.product).replace(/^[^\p{L}\p{N}]+/u,"").replace(/\s*\([^()]*\)\s*$/,"");top[n]=top[n]||{n:0,t:0};top[n].n++;top[n].t+=Number(o.total)||0});
+const tl=Object.entries(top).sort((a,b)=>b[1].n-a[1].n).slice(0,8),lb=RP=="d"?"দিন":RP=="w"?"সপ্তাহ (সোমবার থেকে)":"মাস";
+$("rc").innerHTML=`<div class="chips">${[["d","দিন"],["w","সপ্তাহ"],["m","মাস"]].map(([k,t])=>`<button class="chip ${RP==k?"on":""}" data-rp="${k}">${t}</button>`).join("")}</div>
+<div class="rs"><div><b>${live.length}</b><small>অর্ডার (বাতিল বাদে)</small></div><div><b>৳${sum(live)}</b><small>মোট বিক্রি</small></div><div><b>৳${sum(dn)}</b><small>কমপ্লিট</small></div><div><b>${ORDERS.length-live.length}</b><small>বাতিল</small></div></div>
+<h3 style="margin:14px 0 6px">${lb} অনুযায়ী বিক্রি</h3>
+${ks.map(k=>`<div class="rbar"><span>${esc(k)}</span><div><i style="width:${Math.max(3,Math.round(g[k].t/mx*100))}%"></i></div><b>৳${g[k].t} · ${g[k].n}টি</b></div>`).join("")||'<div class="empty">ডেটা নেই</div>'}
+<h3 style="margin:14px 0 6px">🔥 সবচেয়ে বেশি বিক্রি</h3>
+${tl.map(([n,v],i)=>`<div class="rtop"><span>${i+1}. ${esc(n)}</span><b>${v.n}টি · ৳${v.t}</b></div>`).join("")}
+<p class="meta" style="margin-top:12px">শুধু সর্বশেষ ${ORDERS.length}টি অর্ডার ধরে হিসাব।</p>`}
+$("rc").addEventListener("click",e=>{const b=e.target.closest("[data-rp]");if(b){RP=b.dataset.rp;drawReport()}});
+$("tabR").onclick=()=>setView("r");
+
 /* ---------- 📝 নোট ও ⬇ CSV ---------- */
 let NOTES={};try{NOTES=JSON.parse(localStorage.getItem("nms_notes")||"{}")}catch(e){}
 const getNote=o=>NOTES[o.id]!==undefined?NOTES[o.id]:(o.adminNote||"");
@@ -243,7 +284,7 @@ $("list").addEventListener("input",e=>{const t=e.target;if(t.dataset.act!="note"
 function csvCell(v){v=String(v==null?"":v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 function exportCSV(){
   const q=Q.trim().toLowerCase();
-  const rows=ORDERS.filter(o=>(FILTER=="all"||o.status==FILTER)&&(!q||[o.id,o.name,o.trx,o.product,o.mail,o.details].join(" ").toLowerCase().includes(q)));
+  const rows=ORDERS.filter(o=>(FILTER=="all"||o.status==FILTER)&&dOK(o)&&(!q||[o.id,o.name,o.trx,o.product,o.mail,o.details].join(" ").toLowerCase().includes(q)));
   if(!rows.length){toast("নামানোর মতো অর্ডার নেই");return}
   const H=["Order ID","সময়","পণ্য","মোট (৳)","পেমেন্ট","TrxID","নাম","Gmail","স্ট্যাটাস","বিস্তারিত","নোট"];
   const L=[H.map(csvCell).join(",")].concat(rows.map(o=>[o.id,o.time,o.product,o.total,o.pm,o.trx,o.name,o.mail,o.status,o.details,getNote(o)].map(csvCell).join(",")));
@@ -254,7 +295,7 @@ $("csv").onclick=exportCSV;
 
 /* ---------- 💰 দাম ম্যানেজমেন্ট ---------- */
 let VIEW="o",PR=[],PFL="all",PQ2="";
-function setView(v){VIEW=v;$("tabO").classList.toggle("on",v=="o");$("tabP").classList.toggle("on",v=="p");
+function setView(v){VIEW=v;$("tabR").classList.toggle("on",v=="r");$("rc").style.display=v=="r"?"":"none";if(v=="r"){["oc","list","pc","plist","psave"].forEach(i=>$(i).style.display="none");$("tabO").classList.remove("on");$("tabP").classList.remove("on");drawReport();return}$("tabO").classList.toggle("on",v=="o");$("tabP").classList.toggle("on",v=="p");
 $("oc").style.display=v=="o"?"":"none";$("list").style.display=v=="o"?"":"none";$("pc").style.display=v=="p"?"":"none";$("plist").style.display=v=="p"?"":"none";
 if(v=="p")loadPriceRows();else $("psave").style.display="none"}
 async function loadPriceRows(){const l=$("plist");l.innerHTML='<div class="empty">লোড হচ্ছে...</div>';

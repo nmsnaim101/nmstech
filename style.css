@@ -359,3 +359,4 @@ button,input,select,textarea{font-family:inherit}
 
 .bdg{align-self:flex-start;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:rgba(239,68,68,.18);color:#ff8b8b}.bdg.l{background:rgba(250,204,21,.18);color:var(--gold)}
 img.emoji{height:1.1em;width:1.1em;margin:0 .05em;vertical-align:-.15em;display:inline-block}
+#ann{background:linear-gradient(90deg,#f59e0b,#ef4444);color:#fff;text-align:center;padding:8px 12px;font-weight:700;font-size:14px;position:relative;z-index:30}

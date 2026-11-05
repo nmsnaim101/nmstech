@@ -545,3 +545,9 @@ loadPrices();render();
   document.querySelectorAll("[data-wa]").forEach(function(a){a.href="https://wa.me/"+NMS.wa});
 })();
 thIcon();
+
+/* ⚙ Settings শিট থেকে কম্বো / Best Seller / কাটা দাম / ঘোষণা */
+function ann(t){let e=document.getElementById("ann");if(!t){if(e)e.remove();return}if(!e){e=document.createElement("div");e.id="ann";document.body.insertBefore(e,document.body.firstChild)}e.textContent=t}
+(async function(){if(!NMS.orderUrl)return;try{const d=await(await fetch(NMS.orderUrl+"?action=settings")).json();if(!d||!d.ok)return;const b=JSON.stringify([NMS.hot,NMS.combos,NMS.old]);
+if(d.hot&&d.hot.length)NMS.hot=d.hot;if(d.combos&&d.combos.length)NMS.combos=d.combos;if(d.old&&Object.keys(d.old).length)NMS.old=Object.assign({},NMS.old,d.old);ann(d.banner);
+if(JSON.stringify([NMS.hot,NMS.combos,NMS.old])!==b&&typeof render=="function")render()}catch(e){}})();
