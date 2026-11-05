@@ -444,7 +444,7 @@ async function confirmOrder(){const b=$("cbtn");if(!b||b.disabled||!ORD)return;b
 const{shot,link,msg,sent,...o}=ORD,H={"Content-Type":"text/plain;charset=utf-8"};let ok=false,err="";
 try{const ac=new AbortController(),t=setTimeout(()=>ac.abort(),20000);const r=await fetch(NMS.orderUrl,{method:"POST",headers:H,body:JSON.stringify(o),signal:ac.signal});clearTimeout(t);const d=await r.json();ok=!!(d&&d.ok);err=(d&&d.err)||""}catch(e){ok=false}
 if(!ok){if(err=="price"||err=="unavail"||err=="coupon"||err=="captcha"){orderStale(err);return}orderFail();return}
-ORD.sent=1;try{localStorage.setItem("nms_last",JSON.stringify({n:OD.n,key:priceKey(OD)}))}catch(e){}try{localStorage.setItem("nms_orders",JSON.stringify([ORD.id,...myIds()].slice(0,5)))}catch(e){}
+ORD.sent=1;try{(window.dataLayer=window.dataLayer||[]).push({event:"order_submitted",order_value:Number(ORD.total)||0,order_product:String(ORD.product||"").slice(0,80),order_category:String(ORD.category||"")})}catch(e){}try{localStorage.setItem("nms_last",JSON.stringify({n:OD.n,key:priceKey(OD)}))}catch(e){}try{localStorage.setItem("nms_orders",JSON.stringify([ORD.id,...myIds()].slice(0,5)))}catch(e){}
 orderDone();
 if(SHOT){const d=ORD.shot||await new Promise(r=>setTimeout(()=>r(ORD.shot),1500)),set=t=>{const e=$("shs");if(e)e.textContent=t},bad="⚠ স্ক্রিনশট জমা হয়নি — চাইলে WhatsApp-এ পাঠিয়ে দিন";
 if(!d)set(bad);else fetch(NMS.orderUrl,{method:"POST",headers:H,body:JSON.stringify({shotFor:ORD.id,shot:d})}).then(r=>r.json()).then(x=>set(x&&x.ok?"✅ স্ক্রিনশট জমা হয়েছে":bad)).catch(()=>set(bad))}}
